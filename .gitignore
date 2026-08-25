@@ -1,0 +1,11 @@
+__pycache__/
+slprj/
+*.slxc
+*.asv
+*.bak
+Backup_Project/
+*.log
+*.zip
+
+# Biometric Data
+embeddings.npy
