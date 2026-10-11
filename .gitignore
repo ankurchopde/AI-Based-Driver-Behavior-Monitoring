@@ -1,77 +1,131 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.pyd
-
-# C/C++ build artifacts and installers
 *.exe
 *.dll
-*.so
-*.dylib
-vc_redist.x64.exe
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.matlab_prefs/
 
-# MATLAB and Simulink temporary files and caches
+# MATLAB/Simulink generated files
 slprj/
 _sfprj/
 *.slxc
 *.asv
-*.bak
+*.autosave
+*.m~
 *.mat.autosave
-*.m.autosave
 
-# Archives and large bundles
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.*
+
+# Identity data and datasets (never commit recordings or biometric embeddings)
+SECTIONS/S3_Driver_Identification/database/
+SECTIONS/S3_Driver_Identification/mock_test_database/
+SECTIONS/S3_Driver_Identification/models/
+database/
+**/embeddings.npy
+PROJECT/Data/
+dataset/
+datasets/
+data/
+**/raw_videos/
+**/recordings/
+*.mp4
+*.avi
+*.mov
+
+# Generated reports, evaluation outputs, logs, and temporary exports
+results/
+Results/
+Graph/
+Documentation/
+docs/
+documentation/
+DEVELOPMENT/
+experiments/
+hardware/
+*.log
+*.tmp
+*.swp
+*~
+*_Results.csv
+*_Summary.csv
+FINAL_RUN_REPORT.txt
+Python_Execution_Log.txt
+
+# Archives, local clones, and build artifacts
 *.zip
 *.tar
 *.tar.gz
 *.tgz
 *.rar
 *.7z
-
-# Logs and runtime outputs
-*.log
-*.tmp
-*.swp
-*~
-
-# Biometric Data & Identity Embeddings (Privacy & Security)
-embeddings.npy
-**/embeddings.npy
-mock_test_database/
-**/mock_test_database/
-
-# Large Datasets & Video Archives (Preserved locally, not tracked on Git)
-dataset/
-database/
-PROJECT/Data/section1_drowsiness/
-PROJECT/Data/section2_distraction/
-PROJECT/Data/section3_identification/
-PROJECT/Data/raw/
-PROJECT/Data/processed_real/
-PROJECT/Data/processed/
-PROJECT/Data/extracted_frames/
-PROJECT/Data/statefarm/
-PROJECT/Data/drowsiness/
-PROJECT/Data/distraction/
-PROJECT/Data/driver_identification/
-PROJECT/Data/annotations/
-PROJECT/Data/matlab_dataset_results/
-PROJECT/Data/metadata/
-Section1_Drowsiness_Results.csv
-Section2_Distraction_Results.csv
-
-# Local workspace backups and redundant clone folders
 AI-Based-Driver-Behavior-Monitoring/
 FINAL_AI_Driver_Monitoring/
+GitHub_Release/
 Backup_Project/
 **/Backup_Project/
-experiments/
-hardware/
-docs/
-/models/
 
-# IDE and OS files
+# IDE and operating system files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Root-level generated results from the MATLAB evaluation runner
+/Section1_Drowsiness_Results.csv
+/Section2_Distraction_Results.csv
+
+# Earlier release notes and setup material kept in the working folder
+/CITATION.cff
+/CONTRIBUTING.md
+/EXECUTION_GUIDE.md
+/RELEASE_MANIFEST.md
+INTEGRATED_SYSTEM/*.md
+INTEGRATED_SYSTEM/*.m
+!INTEGRATED_SYSTEM/MASTER_DRIVER_MONITORING_REAL.m
+INTEGRATED_SYSTEM/Python_UDP_Bridge/attention_diagnostic.py
+INTEGRATED_SYSTEM/Python_UDP_Bridge/live_recognition.py
+
+# Duplicate model copies kept locally; the canonical copies are below PROJECT/Models
+PROJECT/Models/external_backends/face_recognizer_fast.onnx
+
+# Development-only folders retained locally for backward compatibility
+SECTIONS/S1_Drowsiness/
+SECTIONS/S2_Distraction/*
+!SECTIONS/S2_Distraction/DistractionLogicSystem.m
+!SECTIONS/S2_Distraction/hand_landmarker.task
+!SECTIONS/S2_Distraction/SteeringWheelDashboard.m
+!SECTIONS/S2_Distraction/driver_monitor_sim_distraction.slx
+!SECTIONS/S2_Distraction/mediapipe_udp_sender.py
+SECTIONS/S3_Driver_Identification/*.md
+SECTIONS/S3_Driver_Identification/*.m
+SECTIONS/S3_Driver_Identification/*.py
+!SECTIONS/S3_Driver_Identification/Task3C_Enrollment.py
+!SECTIONS/S3_Driver_Identification/Task3D_Recognition_Core.py
+!SECTIONS/S3_Driver_Identification/Task3E_Confidence_Logic.py
+!SECTIONS/S3_Driver_Identification/Task3F_Temporal_Filter.py
+!SECTIONS/S3_Driver_Identification/driver_monitor_sim_identification.slx
+PROJECT/Dataset_Pipeline/*.py
+!PROJECT/Dataset_Pipeline/dataset_processing_final_REAL_FINAL.py
+PROJECT/Dataset_Pipeline/*.m
+PROJECT/Results_Generation/
+PROJECT/Tools/Robustness/
+PROJECT/Models/drowsiness/
+PROJECT/Models/distraction/
+PROJECT/Models/identification/identification_*.mat
+/models/

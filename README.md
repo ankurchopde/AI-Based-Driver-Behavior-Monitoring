@@ -1,356 +1,101 @@
-# AI-Based Driver Behavior Monitoring System
+# AI-Based Driver Behavior Monitoring
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python: 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![MATLAB](https://img.shields.io/badge/MATLAB-R2023a%2B-orange.svg)](https://www.mathworks.com/products/matlab.html)
-[![Simulink](https://img.shields.io/badge/Simulink-Integrated-red.svg)](https://www.mathworks.com/products/simulink.html)
+A MATLAB/Simulink and Python prototype for camera-based driver monitoring. It reports driver state and produces visual alerts; it does not control vehicle steering, braking, or acceleration.
 
-An end-to-end computer-vision, deep-learning, and edge-telemetry system designed for non-intrusive in-cabin driver monitoring. The system continuously evaluates driver attentiveness, detects physiological drowsiness (eye-closure and yawning), identifies visual/cognitive distraction (head-pose and gaze orientation), and authenticates driver identity (biometric face recognition).
+## Architecture
 
-> [!IMPORTANT]
-> **Safety Scope Boundary:** This system monitors driver behavior and generates deterministic warning telemetry. It does **not** implement automated vehicle actuation, steering control, acceleration, braking, or autonomous driving functions.
+The live system has two processes. `INTEGRATED_SYSTEM/Python_UDP_Bridge/master_driver_monitor_udp.py` reads a webcam or video, extracts face landmarks, EAR/MAR, head pose and gaze, performs SFace driver recognition, and sends 11 double-precision telemetry values over UDP port 5000. The Simulink model `SECTIONS/S3_Driver_Identification/driver_monitor_sim_identification.slx` receives the stream and applies temporal drowsiness/distraction logic and visual status output. The model uses `SECTIONS/S2_Distraction/DistractionLogicSystem.m` for its distraction subsystem.
 
----
+The three functions implemented in the live bridge are:
 
-## Table of Contents
-1. [Project Overview & Objectives](#1-project-overview--objectives)
-2. [Subsystem Architecture (S1, S2, S3)](#2-subsystem-architecture-s1-s2-s3)
-3. [End-to-End System Architecture](#3-end-to-end-system-architecture)
-4. [Integrated System & Simulink Model Screenshots](#4-integrated-system--simulink-model-screenshots)
-5. [Technologies & Dependencies](#5-technologies--dependencies)
-6. [Repository Directory Structure](#6-repository-directory-structure)
-7. [Installation & Environment Setup](#7-installation--environment-setup)
-8. [Dataset Preparation & Model Assets](#8-dataset-preparation--model-assets)
-9. [Mode A: Offline Dataset Evaluation Pipeline](#9-mode-a-offline-dataset-evaluation-pipeline)
-10. [Mode B: Live Real-Time Edge & Telemetry Pipeline](#10-mode-b-live-real-time-edge--telemetry-pipeline)
-11. [MATLAB & Simulink Integration](#11-matlab--simulink-integration)
-12. [Experimental Results & Verification](#12-experimental-results--verification)
-13. [Presentation Graphs](#13-presentation-graphs)
-14. [Robustness Engineering](#14-robustness-engineering)
-15. [Limitations & Failure Modes](#15-limitations--failure-modes)
-16. [Privacy, Security & Biometrics](#16-privacy-security--biometrics)
-17. [Raspberry Pi Deployment Status](#17-raspberry-pi-deployment-status)
-18. [Troubleshooting & Reproducibility](#18-troubleshooting--reproducibility)
-19. [Acknowledgements & Credits](#19-acknowledgements--credits)
-20. [Academic References](#20-academic-references)
+- **S1 — Drowsiness:** EAR, MAR/yawn cues, face presence and temporal blink/eye state cues. The MATLAB model performs its supervisory logic.
+- **S2 — Attention/distraction:** head pose, gaze and the model's distraction logic. A separate S2 camera sender and Simulink model add hand-on-wheel/wrist cues through a 14-value UDP packet. Phone detection is not implemented.
+- **S3 — Driver identification:** enrollment and SFace embeddings, confidence evaluation and temporal stabilization. Driver names and embeddings are created locally and are not included in this repository.
 
----
+`INTEGRATED_SYSTEM/MASTER_DRIVER_MONITORING_REAL.m` is a separate batch evaluation wrapper. It invokes `PROJECT/Dataset_Pipeline/dataset_processing_final_REAL_FINAL.py`, which processes three prepared dataset manifests and writes CSVs and summaries. It is not the live camera launcher.
 
-## 1. Project Overview & Objectives
-
-Driver fatigue and distraction are primary contributors to vehicular accidents worldwide. The objective of this project is to develop an edge-deployable, multi-stage Driver Monitoring System (DMS) capable of:
-1. Detecting eyelid closure and yawning in real time using geometric facial landmarks.
-2. Classifying head posture deviations and gaze shifts away from the forward roadway.
-3. Authenticating driver identity against a locally enrolled driver database.
-4. Streaming structured telemetry via UDP (User Datagram Protocol) at 20.5 Hz into MATLAB/Simulink dashboards.
-5. Providing robustness against adverse conditions including low cabin illumination and intermittent face tracking loss.
-
----
-
-## 2. Subsystem Architecture (S1, S2, S3)
-
-The project is structured into three specialized subsystems, each documented in its dedicated technical manual:
-
-### Section 1 (S1) — Driver Drowsiness Detection
-📄 **Detailed Documentation:** [`SECTIONS/S1_Drowsiness/README.md`](SECTIONS/S1_Drowsiness/README.md)
-* **Eye Aspect Ratio (EAR):** Uses 6 Euclidean landmark points per eye (indices `33, 160, 158, 133, 153, 144` and `362, 385, 387, 263, 373, 380`) from Google MediaPipe Face Mesh to measure vertical eyelid opening over horizontal eye width.
-* **Mouth Aspect Ratio (MAR):** Uses 4 inner lip landmarks (`13, 14, 78, 308`) to track mouth opening and detect yawning ($\text{MAR} > 0.60$).
-* **Temporal Filtering:** Enforces a 2.0-second persistence timer in Simulink / Python logic to differentiate legitimate reflex blinks (~100–400 ms) from micro-sleep events.
-* **Trained ML Baseline:** Lightweight Decision Tree classifier achieving 99.68% test accuracy on feature vectors extracted from the UTA-RLDD dataset.
-
-### Section 2 (S2) — Driver Distraction & Attention Detection
-📄 **Detailed Documentation:** [`SECTIONS/S2_Distraction/README.md`](SECTIONS/S2_Distraction/README.md)
-* **3D Head Pose Estimation:** Employs `cv2.solvePnP` mapping 6 critical 2D facial landmarks (nose tip, chin, eye corners, mouth corners) against a 3D canonical facial model to compute Euler angles (Yaw, Pitch, Roll).
-* **Relative Eye Gaze:** Measures normalized iris center displacement relative to sclera boundaries to compute horizontal and vertical gaze vectors (`Gaze_X`, `Gaze_Y`).
-* **Distraction Thresholds:** Flags distraction when head yaw exceeds $\pm 25^\circ$ or pitch exceeds $[-15^\circ, +20^\circ]$ persisting for longer than 2.0 seconds.
-* **Trained ML Baseline:** Decision Tree classifier trained on State Farm Distracted Driver dataset features achieving 100.00% validation classification accuracy on partitioned feature vectors.
-
-### Section 3 (S3) — Driver Identification
-📄 **Detailed Documentation:** [`SECTIONS/S3_Driver_Identification/README.md`](SECTIONS/S3_Driver_Identification/README.md)
-* **Face Recognition Core:** Utilizes the lightweight ONNX SFace model (`face_recognizer_fast.onnx`, 38.6 MB) via OpenCV DNN paired with MediaPipe Face Landmarker.
-* **Local Biometric Enrollment:** Computes normalized 128-dimensional facial feature embeddings over 10 sample frames with Laplacian blur validation, saving averaged vectors locally per driver ID.
-* **Confidence & Safety Margins:** Applies dual-threshold matching:
-  * Minimum Cosine Similarity Threshold: `0.363` (below which an unknown driver is reported).
-  * Candidate Margin Threshold: `0.05` (marks classification as `LOW_CONFIDENCE` if competing candidates are too close).
-* **Temporal Stabilization:** Implements a 10-frame persistence buffer to prevent single-frame lighting or angle flickering from flipping identity state.
-
----
-
-## 3. End-to-End System Architecture
-
-[![System Architecture](Graph/architecture.png)](Graph/architecture.png)
-
-*Editable Diagram Sources:* [Vector SVG Source](Graph/architecture.svg) | [Mermaid Source](Graph/architecture.mmd) | [Python Generator](Graph/generate_architecture_diagram.py)
-
-### Telemetry Packet Specification (88 Bytes)
-Transmitted over UDP to `127.0.0.1:5000` at 20.5 Hz as little-endian double-precision floats (`<11d`):
-| Index | Field | Range / Units | Description |
-|:---:|:---|:---:|:---|
-| 0 | `Face_Detected` | `0.0` or `1.0` | Face presence flag |
-| 1 | `Mean_EAR` | `0.0` - `1.0` (or `NaN`) | Average Eye Aspect Ratio |
-| 2 | `MAR` | `0.0` - `2.0` (or `NaN`) | Mouth Aspect Ratio |
-| 3 | `Head_Yaw` | Degrees (or `NaN`) | Head yaw rotation ($\pm 25^\circ$ threshold) |
-| 4 | `Head_Pitch` | Degrees (or `NaN`) | Head pitch rotation ($[-15^\circ, +20^\circ]$ threshold) |
-| 5 | `Head_Roll` | Degrees (or `NaN`) | Head roll rotation |
-| 6 | `Gaze_X` | Normalized $[-1.0, 1.0]$ | Horizontal iris deviation |
-| 7 | `Gaze_Y` | Normalized $[-1.0, 1.0]$ | Vertical iris deviation |
-| 8 | `Driver_ID` | Integer (`-1.0` = Unknown) | Identified Driver ID |
-| 9 | `ID_Confidence` | Cosine similarity float | Match confidence score |
-| 10 | `ID_State` | `0.0` - `3.0` | 0=No Face, 1=Unknown, 2=Identified, 3=Low Conf |
-
----
-
-## 4. Integrated System & Simulink Model Screenshots
-
-📄 **Full Integration Guide:** [`INTEGRATED_SYSTEM/README.md`](INTEGRATED_SYSTEM/README.md)
-
-Genuine high-resolution 300 DPI vector captures of the verified Simulink models:
-
-| Screenshot | Description | Direct Link |
-| :--- | :--- | :--- |
-| **Integrated Model Overview** | Complete 11-channel Simulink model with UDP Receiver, Demux, and scopes | [View Overview](Graph/Simulink_Screenshots/01_integrated_simulink_model.png) |
-| **Distraction Detection Subsystem** | Angular thresholding logic, bounding comparators, and timers | [View Subsystem](Graph/Simulink_Screenshots/01_subsystem_DRIVER_DISTRACTION_DETECTION.png) |
-| **Supervisory State Machine** | Multi-level supervisory warning and risk escalation logic | [View State Machine](Graph/Simulink_Screenshots/01_subsystem_State_Machine.png) |
-| **Yawn Event Subsystem** | MAR thresholding integrator for yawning detection | [View Yawn Logic](Graph/Simulink_Screenshots/01_subsystem_YAWN_EVENT.png) |
-| **Blink End Detection** | Edge detector and blink persistence integrator | [View Blink Logic](Graph/Simulink_Screenshots/01_subsystem_Detect_Blink_End.png) |
-| **S1 Standalone Model** | Baseline Drowsiness Simulink model | [View S1 Model](Graph/Simulink_Screenshots/02_s1_drowsiness_model.png) |
-| **S2 Standalone Model** | Baseline Distraction Simulink model | [View S2 Model](Graph/Simulink_Screenshots/03_s2_distraction_model.png) |
-
----
-
-## 5. Technologies & Dependencies
-
-* **Python:** 3.8+ (tested on Python 3.10 and 3.11 on Windows 11 64-bit).
-* **Computer Vision:** OpenCV (`cv2`) 4.8+, Google MediaPipe (`mediapipe`) 0.10.9+.
-* **Machine Learning & Math:** NumPy 1.24+, SciPy, Scikit-learn 1.3+, Pandas 2.0+.
-* **MATLAB / Simulink:** MATLAB R2022b+ (tested on R2024b / R2025b) with:
-  * Computer Vision Toolbox
-  * Image Processing Toolbox
-  * Statistics and Machine Learning Toolbox
-  * Simulink & DSP System Toolbox
-
----
-
-## 6. Repository Directory Structure
+## Repository contents
 
 ```text
-AI based Driver Detector/
-├── PROJECT/
-│   ├── Data/
-│   │   ├── Database/                   # Template driver registry schema
-│   │   ├── master/                     # Master evaluation dataset CSV
-│   │   └── Tools/                      # Dataset extraction & helper tools
-│   ├── Dataset_Pipeline/               # Offline feature processing scripts
-│   ├── Models/
-│   │   ├── distraction/                # distraction_model.mat
-│   │   ├── drowsiness/                 # drowsiness_model.mat
-│   │   ├── external_backends/          # face_landmarker.task
-│   │   └── identification/             # face_recognizer_fast.onnx
-│   └── Results_Generation/             # Automated metric & graph generation
-├── SECTIONS/
-│   ├── S1_Drowsiness/                  # S1 Simulink model, scripts, README.md
-│   ├── S2_Distraction/                 # S2 Simulink model, head-pose, gaze, README.md
-│   └── S3_Driver_Identification/       # S3 enrollment, core, temporal logic, README.md
-├── INTEGRATED_SYSTEM/
-│   ├── README.md                       # Comprehensive system integration manual
-│   ├── MASTER_DRIVER_MONITORING_REAL.m # Master MATLAB offline pipeline runner
-│   ├── train_models.m                  # Decision tree training script
-│   └── Python_UDP_Bridge/
-│       └── master_driver_monitor_udp.py # Master live camera/video UDP bridge
-├── DOCUMENTATION/                      # Full project reports and specifications
-├── Graph/                              # Final 300 DPI presentation graphs & architecture
-│   └── Simulink_Screenshots/           # Genuine vector captures of Simulink models
-├── results/
-│   ├── CSV/                            # Master, S1, S2, S3 evaluation outputs
-│   ├── Graphs/                         # Full section evaluation figures
-│   └── visuals/                        # Master comparison dashboards
-├── EXECUTION_GUIDE.md                  # Comprehensive execution manual
-├── requirements.txt                    # Python dependency manifest
-├── LICENSE                             # MIT License
-└── README.md                           # Master project documentation
+INTEGRATED_SYSTEM/
+  MASTER_DRIVER_MONITORING_REAL.m
+  Python_UDP_Bridge/          live camera/UDP code and enrollment utility
+PROJECT/
+  Dataset_Pipeline/           real-data batch evaluation processor
+  Models/                     MediaPipe and OpenCV SFace runtime weights
+SECTIONS/
+  S2_Distraction/             standalone hand-aware sender, model, and logic
+  S3_Driver_Identification/    recognition modules and integrated Simulink model
+requirements.txt
 ```
 
----
+## Prerequisites
 
-## 7. Installation & Environment Setup
+- Python 3.10 or newer with a webcam for live use. Install packages with `python -m pip install -r requirements.txt`.
+- MATLAB/Simulink with the UDP Receive block support required by the included model. The exact MATLAB release and toolbox compatibility have not been verified in this environment.
+- A webcam (or a video file) for live monitoring. The application binds UDP to `127.0.0.1:5000`.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/ankurchopde/AI-Based-Driver-Behavior-Monitoring.git
-cd AI-Based-Driver-Behavior-Monitoring
-```
+## Live execution
 
-### 2. Set Up Python Environment
+From the repository root, start the Python camera process:
+
 ```powershell
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
+python INTEGRATED_SYSTEM/Python_UDP_Bridge/master_driver_monitor_udp.py --camera 0 --fps 20
 ```
 
-### 3. Verify Model Assets
-Verify required pretrained models are located in `PROJECT/Models/`:
-* `PROJECT/Models/external_backends/face_landmarker.task` (MediaPipe Face Landmarker)
-* `PROJECT/Models/identification/face_recognizer_fast.onnx` (SFace ONNX model)
-* `PROJECT/Models/drowsiness/drowsiness_model.mat` (Trained S1 Decision Tree)
-* `PROJECT/Models/distraction/distraction_model.mat` (Trained S2 Decision Tree)
+Use `--video path/to/video.mp4` instead of `--camera 0` for video input, or add `--headless` to disable the Python preview. Press `q` or Escape to stop the preview. In MATLAB, set the current folder to the repository root and run:
 
----
-
-## 8. Dataset Preparation & Model Assets
-
-The offline training and evaluation pipelines leverage public academic benchmarks:
-1. **UTA-RLDD (Real-Life Drowsiness Dataset):** Used for S1 Drowsiness evaluation (alert, drowsy, low-vigilance classes).
-2. **State Farm Distracted Driver Detection Dataset:** Used for S2 distraction pose classification.
-3. **CASIA-WebFace / LFW:** Used for S3 face identification benchmark testing.
-
-> [!NOTE]
-> **Data Redistribution:** Raw video files and high-volume image archives (>100 MB) are omitted from git tracking in accordance with public repository size limits and original academic dataset licensing. Evaluation scripts process standardized tabular features in `PROJECT/Data/master/Driver_Monitoring_Master_Dataset.csv` and generate outputs in `results/CSV/`.
-
----
-
-## 9. Mode A: Offline Dataset Evaluation Pipeline
-
-Mode A executes dataset inference, model retraining, and offline metric calculation without requiring a live camera.
-
-### Step 1: Model Training (MATLAB)
 ```matlab
-run('INTEGRATED_SYSTEM/train_models.m')
+open_system('SECTIONS/S3_Driver_Identification/driver_monitor_sim_identification.slx');
 ```
-*Outputs:* `PROJECT/Models/drowsiness/drowsiness_model.mat`, `PROJECT/Models/distraction/distraction_model.mat`.
 
-### Step 2: Full Offline Inference & Evaluation (MATLAB)
+Start the Simulink model after starting Python so it can receive telemetry on port 5000. Stop the Python process and Simulink model when finished.
+
+### Standalone hand-aware S2 mode
+
+The S2 variant is a separate 14-value telemetry path, and must not run at the same time as the 11-value integrated bridge because both use UDP port 5000. Start its sender from the repository root:
+
+```powershell
+python SECTIONS/S2_Distraction/mediapipe_udp_sender.py
+```
+
+In MATLAB, open `SECTIONS/S2_Distraction/driver_monitor_sim_distraction.slx` and start the model. This variant uses the central face landmarker and the local `hand_landmarker.task`; it is not the 11-value integrated model's input format.
+
+### Driver enrollment
+
+Enroll a driver locally before running recognition:
+
+```powershell
+python INTEGRATED_SYSTEM/Python_UDP_Bridge/live_enrollment.py --id 1 --name "Driver Name" --samples 20
+```
+
+The enrollment utility stores `registry.json` and `embeddings.npy` under `SECTIONS/S3_Driver_Identification/database/`. This directory is ignored by Git because it contains biometric data. Keep it local and back it up securely if needed; without enrolled drivers, S3 reports unknown/no identity.
+
+## Optional batch evaluation
+
+The MATLAB wrapper runs the Python processor and collects its outputs:
+
 ```matlab
-run('INTEGRATED_SYSTEM/MASTER_DRIVER_MONITORING_REAL.m')
-```
-*Outputs:* `results/CSV/Master_Driver_Monitoring_Results.csv`, `results/Graphs/*.png`.
-
----
-
-## 10. Mode B: Live Real-Time Edge & Telemetry Pipeline
-
-Mode B runs the real-time pipeline, capturing frames from a physical camera or pre-recorded test video and streaming UDP telemetry.
-
-### 1. Launch Master Live Bridge
-```powershell
-# Standard webcam operation with GUI dashboard overlay:
-python INTEGRATED_SYSTEM/Python_UDP_Bridge/master_driver_monitor_udp.py --camera 0 --fps 20.0
-
-# Headless edge operation (ideal for single-board computers):
-python INTEGRATED_SYSTEM/Python_UDP_Bridge/master_driver_monitor_udp.py --camera 0 --headless --fps 20.0
-
-# Test using a recorded video file (no webcam needed):
-python INTEGRATED_SYSTEM/Python_UDP_Bridge/master_driver_monitor_udp.py --video "PROJECT\Data\Raw_Videos\test_driver.mp4" --fps 20.0
+cd('<repository-root>/INTEGRATED_SYSTEM');
+MASTER_DRIVER_MONITORING_REAL
 ```
 
-### 2. Live Driver Enrollment (S3)
-```powershell
-cd "SECTIONS\S3_Driver_Identification"
-python live_enrollment.py --name "Driver_Name"
-```
+The processor requires these locally prepared input files, which are not distributed here:
 
----
+- `PROJECT/Data/processed_real/manifests/section1_manifest.csv`
+- `PROJECT/Data/processed_real/manifests/section2_manifest.csv`
+- `PROJECT/Data/processed_real/manifests/section3_manifest.csv`
 
-## 11. MATLAB & Simulink Integration
+The manifest rows must point to the corresponding local video/image data expected by the processor. Obtain datasets through their original sources, follow their terms, prepare the manifests for this project's processor, and keep the data under the ignored `PROJECT/Data/` tree. The evaluation writes CSVs and graphs locally under `results/` and at the repository root; generated outputs are ignored.
 
-With `master_driver_monitor_udp.py` actively running:
-1. Open MATLAB and set current folder to repository root:
-   ```matlab
-   addpath(genpath('SECTIONS'));
-   addpath(genpath('INTEGRATED_SYSTEM'));
-   ```
-2. Open and run the integrated Simulink model:
-   ```matlab
-   open_system('SECTIONS/S3_Driver_Identification/driver_monitor_sim_identification.slx');
-   set_param('driver_monitor_sim_identification', 'SimulationCommand', 'start');
-   ```
-3. Simulink receives live UDP datagrams via `UDPReceiverSystemIdentification.m` at Port 5000 and updates real-time diagnostic scopes.
+## Models and configuration
 
----
+The required runtime weights are `PROJECT/Models/external_backends/face_landmarker.task` and `PROJECT/Models/identification/face_recognizer_fast.onnx`. The optional hand-aware S2 mode and batch evaluation also use `SECTIONS/S2_Distraction/hand_landmarker.task`. Camera index, video source, frame rate, headless mode, and frame skipping are command-line options on the integrated Python bridge. The UDP address and port are currently constants in the sender source.
 
-## 12. Experimental Results & Verification
+## Limitations and deployment
 
-| Subsystem | Metric | Measured Value | Validation Source |
-|:---|:---|:---:|:---|
-| **S1 Drowsiness** | Decision Tree Accuracy | **99.68%** | UTA-RLDD partitioned dataset |
-| **S1 Drowsiness** | Persistence Safety Threshold | 2.0 s | Programmatic Simulink verification |
-| **S2 Distraction** | Decision Tree Accuracy | **100.00%** | State Farm partitioned feature dataset |
-| **S2 Distraction** | Head Yaw / Pitch Thresholds | $\pm 25^\circ$ / $[-15^\circ, +20^\circ]$ | Geometric head pose verification |
-| **S3 Identification** | Cosine Similarity Match Score | **1.0000** | Known enrolled face test suite |
-| **S3 Identification** | Unknown Driver Rejection | **Score < 0.363** | Cosine margin threshold test |
-| **Live Telemetry** | UDP Transmission Frequency | **20.5 Hz** | Socket timing audit |
-| **Live Telemetry** | Packet Integrity | 88 Bytes (`<11d`) | Struct binary unpacked audit |
+This is a research prototype, not a validated safety system. Gaze/head-pose thresholds and recognition confidence settings are candidates, not calibrated driver-specific thresholds. Runtime behavior with a camera, Simulink model, and enrolled drivers was not verified here. Alerts are prototype visual/supervisory outputs; there is no vehicle-control interface. Raspberry Pi deployment will require checking supported MATLAB/Simulink availability or replacing that supervisory runtime, validating ARM-compatible Python wheels and model latency, and measuring thermal and power behavior on target hardware.
 
----
+## License
 
-## 13. Presentation Graphs
-
-The verified presentation figures are located in `Graph/` and `results/visuals/`:
-
-1. **[`1_Lighting_Coverage_Before_After.png`](Graph/1_Lighting_Coverage_Before_After.png)** — Face Detection Coverage Under Simulated Lighting Scenarios: Baseline vs. Adaptive CLAHE.
-2. **[`2_Inference_Latency_Comparison.png`](Graph/2_Inference_Latency_Comparison.png)** — Stage-by-stage pipeline latency (MediaPipe 18.2 ms, SFace 41.5 ms).
-3. **[`3_FPS_Comparison.png`](Graph/3_FPS_Comparison.png)** — Processing framerates across GPU, CPU, and edge profiles.
-4. **[`4_S1_Confusion_Matrix.png`](Graph/4_S1_Confusion_Matrix.png)** — S1 Drowsiness Classification Confusion Matrix (94.2% sensitivity).
-5. **[`5_S2_Confusion_Matrix.png`](Graph/5_S2_Confusion_Matrix.png)** — S2 Distraction Classification Confusion Matrix (91.8% accuracy).
-6. **[`6_S3_Confusion_Matrix.png`](Graph/6_S3_Confusion_Matrix.png)** — S3 Driver Identification Confusion Matrix (97.5% verification).
-7. **[`7_COMBINED_RESULTS_DASHBOARD.png`](Graph/7_COMBINED_RESULTS_DASHBOARD.png)** — Comprehensive 6-panel academic summary dashboard.
-8. **[`FIG1_S1_Drowsiness_Final.png`](Graph/FIG1_S1_Drowsiness_Final.png)**, **[`FIG2_S2_Distraction_Final.png`](Graph/FIG2_S2_Distraction_Final.png)**, **[`FIG3_S3_Identification_Final.png`](Graph/FIG3_S3_Identification_Final.png)** — Detailed subsystem dynamic waveforms.
-
----
-
-## 14. Robustness Engineering
-
-1. **Adaptive CLAHE Lighting Enhancement:** When average grayscale brightness falls below 60, the pipeline dynamically applies Contrast-Limited Adaptive Histogram Equalization exclusively to the $L$ (Lightness) channel in LAB color space, recovering 62% face detection coverage in low light.
-2. **Missing Observation NaN Protocol:** When face tracking is temporarily lost, the Python bridge broadcasts `NaN` for EAR, MAR, Yaw, Pitch, and Roll instead of zero. This prevents Simulink from mistaking face loss for closed eyes ($EAR=0.0$), eliminating false positive alarms.
-3. **Decoupled UDP Worker Thread:** The UDP broadcaster runs on a dedicated high-priority daemon thread at a locked 20.5 Hz clock, decoupling packet delivery from vision inference latency.
-4. **Temporal Stability Filtering:** Multi-frame persistence buffers (10 frames for S3 identification; 2.0 s timer for S1/S2 alarms) filter out momentary eye blinks and mirror glances.
-
----
-
-## 15. Limitations & Failure Modes
-
-* **Extreme Darkness Without IR Illumination:** Under near-zero illumination ($\gamma < 0.2$), RGB webcams produce severe shot noise. While Adaptive CLAHE recovers moderate underexposure, automotive deployment requires active Near-Infrared (NIR) illumination.
-* **Severe Face Occlusion:** Polarized sunglasses or medical face masks prevent eyelid or mouth landmark extraction; the system gracefully transitions to `NO_FACE` state.
-* **Passive Safety Only:** The system generates supervisory warnings only and cannot autonomously brake or steer the vehicle.
-
----
-
-## 16. Raspberry Pi Deployment Status
-
-The software architecture is engineered for future Edge AI deployment on single-board computers (Raspberry Pi 4 / 5):
-* **Headless Capability:** The bridge natively supports `--headless` execution, avoiding X11 window server overhead.
-* **Target Hardware:** Raspberry Pi 4/5 (Quad-Core ARM Cortex-A76) with Raspberry Pi Camera Module V2/V3.
-* **Target Performance:** Projected 18–25 FPS with quantized INT8 ONNX models and frame skipping (`--skip-frames 1`).
-* **Current Status:** Thoroughly verified under desktop PC simulation (Windows 11). Physical deployment on physical Raspberry Pi hardware remains planned future work.
-
----
-
-## 17. Troubleshooting & Reproducibility
-
-* **Camera Cannot Open:** Verify webcam index (try `--camera 1`). Ensure other applications (Zoom, Teams) have released the camera.
-* **UDP Port 5000 Conflict:** Ensure previous instances of Python or MATLAB are terminated.
-* **Running All Unit Tests:**
-  ```powershell
-  python SECTIONS/S3_Driver_Identification/test_Task3C.py
-  python SECTIONS/S3_Driver_Identification/test_Task3D.py
-  python SECTIONS/S3_Driver_Identification/test_Task3E.py
-  python SECTIONS/S3_Driver_Identification/test_Task3F.py
-  python SECTIONS/S3_Driver_Identification/test_Task3H.py
-  ```
-
----
-
-## 18. Acknowledgements & Credits
-
-* **Section 1 (Driver Drowsiness Detection):** The architecture Section 1 was authored by **Tanmaygt1** ([GitHub: @Tanmaygt1](https://github.com/Tanmaygt1)). This credit applies specifically and exclusively to Section 1.
-* **Google MediaPipe:** Face Landmarker and Mesh models developed by Google LLC.
-* **OpenCV DNN SFace:** Lightweight deep face recognition model developed by the OpenCV community.
-
----
-
-## 19. Academic References
-
-1. Soukupová, T., & Čech, J. (2016). *Real-Time Eye Blink Detection using Facial Landmarks.* 21st Computer Vision Winter Workshop (CVWW2016).
-2. Ghoddoosian, R., Bartlett, M., & Kholgade, P. (2019). *A Realistic Dataset and Baseline Temporal Model for Detecting Driver Drowsiness.* IEEE International Conference on Computer Vision Workshops (ICCVW).
-3. State Farm. (2016). *State Farm Distracted Driver Detection.* Kaggle Competition Benchmark.
-4. Zhang, K., Zhang, Z., Li, Z., & Qiao, Y. (2016). *Joint Face Detection and Alignment Using Multi-task Cascaded Convolutional Networks.* IEEE Signal Processing Letters, 23(10), 1499-1503.
-5. Rezaei, A., & Klette, R. (2014). *Look at the Driver, Look at the Road: No Distraction! No Accident!* IEEE Transactions on Intelligent Transportation Systems.
+See [LICENSE](LICENSE).

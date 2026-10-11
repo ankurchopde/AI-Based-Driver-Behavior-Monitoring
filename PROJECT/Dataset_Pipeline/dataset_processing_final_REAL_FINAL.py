@@ -161,7 +161,7 @@ def calculate_mar(landmarks, width, height):
 
 
 def create_detectors():
-    face_model = S2_DIR / "face_landmarker.task"
+    face_model = ROOT / "PROJECT" / "Models" / "external_backends" / "face_landmarker.task"
     hand_model = S2_DIR / "hand_landmarker.task"
 
     if not face_model.exists():
@@ -608,9 +608,7 @@ def process_s3():
     model_src = S3_DIR / "models" / "face_recognizer_fast.onnx"
     if not model_src.exists():
         model_src = ROOT / "PROJECT" / "Models" / "identification" / "face_recognizer_fast.onnx"
-    task_path = S2_DIR / "face_landmarker.task"
-    if not task_path.exists():
-        task_path = ROOT / "PROJECT" / "Models" / "external_backends" / "face_landmarker.task"
+    task_path = ROOT / "PROJECT" / "Models" / "external_backends" / "face_landmarker.task"
 
     if not model_src.exists():
         print(f"[S3] Missing recognition model: {model_src}")

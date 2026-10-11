@@ -1,7 +1,13 @@
 import argparse
 import cv2
 import sys
+from pathlib import Path
 from Task3C_Enrollment import EnrollmentSystem
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATABASE_DIR = PROJECT_ROOT / "SECTIONS" / "S3_Driver_Identification" / "database"
+FACE_MODEL = PROJECT_ROOT / "PROJECT" / "Models" / "identification" / "face_recognizer_fast.onnx"
+LANDMARKER_MODEL = PROJECT_ROOT / "PROJECT" / "Models" / "external_backends" / "face_landmarker.task"
 
 def main():
     parser = argparse.ArgumentParser(description="Live Webcam Driver Enrollment")
@@ -14,7 +20,11 @@ def main():
     
     print(f"Initializing Enrollment System for Driver {args.id}: {args.name}")
     try:
-        enroll_sys = EnrollmentSystem()
+        enroll_sys = EnrollmentSystem(
+            db_path=str(DATABASE_DIR),
+            model_path=str(FACE_MODEL),
+            task_path=str(LANDMARKER_MODEL),
+        )
     except Exception as e:
         print(f"Error initializing Enrollment System: {e}")
         sys.exit(1)

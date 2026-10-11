@@ -1,9 +1,0 @@
-Section,Metric,Value
-S1_Drowsiness,Samples,5847
-S1_Drowsiness,Face_Detection_Rate_percent,0
-S1_Drowsiness,Mean_FPS,764835.601738765
-S1_Drowsiness,Median_FPS,769230.831716182
-S1_Drowsiness,Mean_Processing_Time_ms,0.00196849667329751
-S1_Drowsiness,Median_Processing_Time_ms,0.00129999989439966
-S1_Drowsiness,Mean_CPU_percent,3.24323584744313
-S1_Drowsiness,Mean_RAM_MB,484.175169290876

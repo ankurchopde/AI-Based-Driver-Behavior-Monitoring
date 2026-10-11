@@ -2,9 +2,15 @@ import cv2
 import math
 import socket
 import struct
+import sys
+from pathlib import Path
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+BRIDGE_DIR = PROJECT_ROOT / "INTEGRATED_SYSTEM" / "Python_UDP_Bridge"
+sys.path.insert(0, str(BRIDGE_DIR))
+
 from head_pose import HeadPoseEstimator
 from gaze_diagnostic import (
     calculate_eye_gaze,
@@ -86,7 +92,9 @@ def main():
     global telemetry_data, stop_thread
     
     # Initialize Face Landmarker
-    base_options = python.BaseOptions(model_asset_path='face_landmarker.task')
+    face_model = PROJECT_ROOT / "PROJECT" / "Models" / "external_backends" / "face_landmarker.task"
+    hand_model = Path(__file__).resolve().with_name("hand_landmarker.task")
+    base_options = python.BaseOptions(model_asset_path=str(face_model))
     options = vision.FaceLandmarkerOptions(
         base_options=base_options,
         output_face_blendshapes=False,
@@ -99,7 +107,7 @@ def main():
     detector = vision.FaceLandmarker.create_from_options(options)
     
     # Initialize Hand Landmarker
-    hand_base_options = python.BaseOptions(model_asset_path='hand_landmarker.task')
+    hand_base_options = python.BaseOptions(model_asset_path=str(hand_model))
     hand_options = vision.HandLandmarkerOptions(
         base_options=hand_base_options,
         num_hands=2,
