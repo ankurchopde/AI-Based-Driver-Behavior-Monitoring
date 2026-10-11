@@ -1,0 +1,26 @@
+AI-BASED DRIVER BEHAVIOR MONITORING - FINAL RUN REPORT
+=========================================================
+
+Project root: D:\Academics\TY_SEM1\AE\AI based Driver Detector
+Python processor: D:\Academics\TY_SEM1\AE\AI based Driver Detector\PROJECT\Dataset_Pipeline\dataset_processing_final_REAL_FINAL.py
+Python execution time: 222.124 s
+
+SECTION 1 - DROWSINESS
+Rows processed: 5847
+
+SECTION 2 - DISTRACTION
+Rows processed: 22423
+
+SECTION 3 - IDENTIFICATION
+Rows processed: 259
+
+OUTPUTS
+CSV directory: D:\Academics\TY_SEM1\AE\AI based Driver Detector\results\CSV
+Graphs directory: D:\Academics\TY_SEM1\AE\AI based Driver Detector\results\Graphs
+Summary directory: D:\Academics\TY_SEM1\AE\AI based Driver Detector\results\Summary
+Python log: D:\Academics\TY_SEM1\AE\AI based Driver Detector\results\Raw_Python\Python_Execution_Log.txt
+
+IMPORTANT
+Ground truth and predictions are kept separate.
+NaN indicates unavailable/non-applicable measurements.
+Measured FPS is host-PC processing FPS and is not Raspberry Pi FPS.

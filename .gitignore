@@ -1,11 +1,77 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# C/C++ build artifacts and installers
+*.exe
+*.dll
+*.so
+*.dylib
+vc_redist.x64.exe
+
+# MATLAB and Simulink temporary files and caches
 slprj/
+_sfprj/
 *.slxc
 *.asv
 *.bak
-Backup_Project/
-*.log
-*.zip
+*.mat.autosave
+*.m.autosave
 
-# Biometric Data
+# Archives and large bundles
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Logs and runtime outputs
+*.log
+*.tmp
+*.swp
+*~
+
+# Biometric Data & Identity Embeddings (Privacy & Security)
 embeddings.npy
+**/embeddings.npy
+mock_test_database/
+**/mock_test_database/
+
+# Large Datasets & Video Archives (Preserved locally, not tracked on Git)
+dataset/
+database/
+PROJECT/Data/section1_drowsiness/
+PROJECT/Data/section2_distraction/
+PROJECT/Data/section3_identification/
+PROJECT/Data/raw/
+PROJECT/Data/processed_real/
+PROJECT/Data/processed/
+PROJECT/Data/extracted_frames/
+PROJECT/Data/statefarm/
+PROJECT/Data/drowsiness/
+PROJECT/Data/distraction/
+PROJECT/Data/driver_identification/
+PROJECT/Data/annotations/
+PROJECT/Data/matlab_dataset_results/
+PROJECT/Data/metadata/
+Section1_Drowsiness_Results.csv
+Section2_Distraction_Results.csv
+
+# Local workspace backups and redundant clone folders
+AI-Based-Driver-Behavior-Monitoring/
+FINAL_AI_Driver_Monitoring/
+Backup_Project/
+**/Backup_Project/
+experiments/
+hardware/
+docs/
+models/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

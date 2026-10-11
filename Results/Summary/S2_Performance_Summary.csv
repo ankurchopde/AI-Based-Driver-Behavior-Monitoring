@@ -1,0 +1,9 @@
+Section,Metric,Value
+S2_Distraction,Samples,22423
+S2_Distraction,Face_Detection_Rate_percent,0
+S2_Distraction,Mean_FPS,650367.824468237
+S2_Distraction,Median_FPS,714285.379669035
+S2_Distraction,Mean_Processing_Time_ms,0.0021302992472378
+S2_Distraction,Median_Processing_Time_ms,0.001400000655849
+S2_Distraction,Mean_CPU_percent,3.22608482361861
+S2_Distraction,Mean_RAM_MB,518.496084865428

@@ -1,0 +1,10 @@
+Section,Metric,Value
+S3_Identification,Samples,259
+S3_Identification,Face_Detection_Rate_percent,35.1351351351351
+S3_Identification,Mean_FPS,1706.02133976298
+S3_Identification,Median_FPS,1832.84457513015
+S3_Identification,Mean_Processing_Time_ms,9.10086332048009
+S3_Identification,Median_Processing_Time_ms,0.545599999895785
+S3_Identification,Mean_CPU_percent,21.4706563706564
+S3_Identification,Mean_RAM_MB,829.578486969112
+S3_Identification,Identification_Accuracy_percent,100

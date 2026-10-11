@@ -1,0 +1,44 @@
+{
+  "input_shape": [
+    1,
+    3,
+    28,
+    28
+  ],
+  "weight_shape": [
+    16,
+    3,
+    3,
+    3
+  ],
+  "bias_shape": [
+    16
+  ],
+  "output_shape": [
+    1,
+    16,
+    28,
+    28
+  ],
+  "fixed_point": {
+    "input_width": 16,
+    "input_frac_bits": 8,
+    "weight_width": 16,
+    "weight_frac_bits": 8,
+    "accum_width": 32,
+    "output_width": 16,
+    "output_frac_bits": 8,
+    "formats": {
+      "input": "Q7.8",
+      "weight": "Q7.8",
+      "output": "Q7.8"
+    }
+  },
+  "comparison": {
+    "max_error": 146.83282470703125,
+    "mean_error": 98.6135025024414,
+    "rmse": 107.25250244140625,
+    "within_tolerance_0_5": 0,
+    "total_elements": 12544,
+    "tolerance": 0.5,
+    "pass": 

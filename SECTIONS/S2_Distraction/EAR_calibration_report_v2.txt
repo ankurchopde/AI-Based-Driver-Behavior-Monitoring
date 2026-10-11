@@ -1,0 +1,31 @@
+EAR CALIBRATION REPORT V2
+
+-- LATENCY & QUEUE METRICS --
+Total Packets Received: 723
+Total Packets Processed (LIVE): 630
+Total Packets Discarded (STALE): 93
+Max Queue Depth: 94
+Mean Live Latency: 0.1 ms
+Max Live Latency: 33.3 ms
+Percentage of Stale Packets Dropped: 12.9%
+
+-- STATISTICS --
+Open-eye (N=451): Mean = 0.1333 | Median = 0.1393 | Range = [0.0000, 0.2972]
+Closed-eye (N=179): Mean = 0.2306 | Median = 0.2739 | Range = [0.0000, 0.3586]
+
+Difference between Means: -0.0973
+Difference between Medians: -0.1346
+Distribution Overlap: 0.3586
+
+-- CLASSIFICATION PERFORMANCE --
+Best candidate threshold: 0.0000
+Accuracy: 71.59%
+Sensitivity (True Closed Rate): 0.00%
+Specificity (True Open Rate): 100.00%
+False-open rate: 100.00%
+False-closed rate: 0.00%
+
+SEPARATION QUALITY: POOR
+
+CONCLUSION:
+EAR separation is insufficient; additional calibration or landmark improvements are required.

@@ -1,0 +1,18 @@
+FINAL RESULTS GENERATION SUMMARY
+=============================================
+
+S1 samples: 5846
+S2 samples: 22422
+S3 samples: 2000
+TOTAL: 30268
+
+CSV files generated:
+S1_Drowsiness_Results.csv
+S2_Distraction_Results.csv
+S3_Identification_Results.csv
+Master_Driver_Monitoring_Results.csv
+
+Graphs generated: 8 PNG files.
+
+This stage prepares and consolidates real dataset inputs.
+AI prediction/performance must be populated by the actual project algorithms.

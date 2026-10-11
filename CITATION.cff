@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this project or its methods, please cite it as below."
+authors:
+  - family-names: "Chopde"
+    given-names: "Ankur"
+title: "AI-Based Driver Behavior Monitoring System"
+version: 1.0.0
+date-released: 2026-10-11
+url: "https://github.com/ankurchopde/AI-Based-Driver-Behavior-Monitoring"
+repository-code: "https://github.com/ankurchopde/AI-Based-Driver-Behavior-Monitoring"
+license: MIT
