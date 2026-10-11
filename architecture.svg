@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">AI-Based Driver Behavior Monitoring System Architecture</title>
+  <desc id="desc">Integrated live camera processing, independent S1 and S2 demo paths, and offline evaluation workflow.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#475569"/></marker>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 34px Arial,sans-serif;fill:#0f172a}.subtitle{font:18px Arial,sans-serif;fill:#475569}
+      .lane{fill:#fff;stroke:#cbd5e1;stroke-width:2;rx:22}.lanehead{font:700 22px Arial,sans-serif;fill:#0f172a}
+      .box{stroke-width:2;rx:14}.blue{fill:#eff6ff;stroke:#2563eb}.green{fill:#ecfdf5;stroke:#059669}.orange{fill:#fff7ed;stroke:#ea580c}.purple{fill:#f5f3ff;stroke:#7c3aed}.gray{fill:#f1f5f9;stroke:#64748b}
+      .boxtitle{font:700 18px Arial,sans-serif;fill:#0f172a}.body{font:15px Arial,sans-serif;fill:#334155}.small{font:14px Arial,sans-serif;fill:#475569}.edge{stroke:#475569;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .warning{font:700 15px Arial,sans-serif;fill:#b45309}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="1120"/>
+  <text id="title" x="800" y="54" text-anchor="middle" class="title">AI-BASED DRIVER BEHAVIOR MONITORING</text>
+  <text id="desc" x="800" y="84" text-anchor="middle" class="subtitle">Python computer vision · MATLAB/Simulink logic · local-only data</text>
+
+  <rect class="lane" x="40" y="115" width="1520" height="310"/>
+  <text x="70" y="153" class="lanehead">Integrated live system</text>
+  <rect class="box blue" x="75" y="220" width="180" height="110"/>
+  <text x="165" y="263" text-anchor="middle" class="boxtitle">Camera input</text>
+  <text x="165" y="291" text-anchor="middle" class="body">Webcam or video</text>
+  <rect class="box purple" x="320" y="185" width="430" height="180"/>
+  <text x="535" y="222" text-anchor="middle" class="boxtitle">Python vision bridge</text>
+  <text x="350" y="255" class="body">S1 · face presence, EAR, MAR</text>
+  <text x="350" y="283" class="body">S2 · head pose and gaze</text>
+  <text x="350" y="311" class="body">S3 · SFace identity and confidence</text>
+  <rect class="box gray" x="350" y="375" width="370" height="38"/>
+  <text x="535" y="400" text-anchor="middle" class="small">Local enrolled-driver templates (optional)</text>
+  <rect class="box green" x="825" y="220" width="200" height="110"/>
+  <text x="925" y="263" text-anchor="middle" class="boxtitle">UDP telemetry</text>
+  <text x="925" y="291" text-anchor="middle" class="body">127.0.0.1:5000</text>
+  <text x="925" y="314" text-anchor="middle" class="small">11 little-endian doubles</text>
+  <rect class="box orange" x="1100" y="190" width="400" height="170"/>
+  <text x="1300" y="229" text-anchor="middle" class="boxtitle">Integrated Simulink model</text>
+  <text x="1300" y="260" text-anchor="middle" class="body">driver_monitor_sim_identification.slx</text>
+  <text x="1300" y="295" text-anchor="middle" class="body">State logic, scopes, prototype alerts</text>
+  <text x="1300" y="326" text-anchor="middle" class="small">No steering, braking, or acceleration control</text>
+  <path class="edge" d="M255 275 H310"/><path class="edge" d="M750 275 H815"/><path class="edge" d="M1025 275 H1090"/>
+  <path class="edge" d="M535 375 V367"/>
+
+  <rect class="lane" x="40" y="450" width="1520" height="280"/>
+  <text x="70" y="488" class="lanehead">Standalone section demonstrations · run one sender at a time</text>
+  <rect class="box blue" x="75" y="525" width="165" height="70"/>
+  <text x="157" y="553" text-anchor="middle" class="boxtitle">S1 camera</text>
+  <text x="157" y="578" text-anchor="middle" class="small">Face + eye/mouth</text>
+  <rect class="box purple" x="300" y="525" width="245" height="70"/>
+  <text x="422" y="553" text-anchor="middle" class="boxtitle">S1 Python sender</text>
+  <text x="422" y="578" text-anchor="middle" class="small">Presence, EAR, MAR</text>
+  <rect class="box green" x="610" y="525" width="210" height="70"/>
+  <text x="715" y="553" text-anchor="middle" class="boxtitle">UDP · 3 doubles</text>
+  <text x="715" y="578" text-anchor="middle" class="small">Port 5000</text>
+  <rect class="box orange" x="900" y="525" width="320" height="70"/>
+  <text x="1060" y="553" text-anchor="middle" class="boxtitle">S1 Simulink model</text>
+  <text x="1060" y="578" text-anchor="middle" class="small">Standalone drowsiness logic</text>
+  <path class="edge" d="M240 560 H290"/><path class="edge" d="M545 560 H600"/><path class="edge" d="M820 560 H890"/>
+  <rect class="box blue" x="75" y="625" width="165" height="70"/>
+  <text x="157" y="653" text-anchor="middle" class="boxtitle">S2 camera</text>
+  <text x="157" y="678" text-anchor="middle" class="small">Face + hand</text>
+  <rect class="box purple" x="300" y="625" width="245" height="70"/>
+  <text x="422" y="653" text-anchor="middle" class="boxtitle">S2 Python sender</text>
+  <text x="422" y="678" text-anchor="middle" class="small">Pose, gaze, hand/wrist</text>
+  <rect class="box green" x="610" y="625" width="210" height="70"/>
+  <text x="715" y="653" text-anchor="middle" class="boxtitle">UDP · 14 doubles</text>
+  <text x="715" y="678" text-anchor="middle" class="small">Port 5000</text>
+  <rect class="box orange" x="900" y="625" width="320" height="70"/>
+  <text x="1060" y="653" text-anchor="middle" class="boxtitle">S2 Simulink model</text>
+  <text x="1060" y="678" text-anchor="middle" class="small">Standalone attention logic</text>
+  <path class="edge" d="M240 660 H290"/><path class="edge" d="M545 660 H600"/><path class="edge" d="M820 660 H890"/>
+  <text x="1280" y="586" class="warning">Different packet sizes share port 5000.</text>
+  <text x="1280" y="611" class="warning">Do not run these modes together.</text>
+
+  <rect class="lane" x="40" y="755" width="1520" height="300"/>
+  <text x="70" y="793" class="lanehead">Offline dataset evaluation · independent from live camera monitoring</text>
+  <rect class="box blue" x="100" y="865" width="270" height="110"/>
+  <text x="235" y="908" text-anchor="middle" class="boxtitle">Local datasets</text>
+  <text x="235" y="938" text-anchor="middle" class="body">Videos, images, manifests</text>
+  <rect class="box purple" x="475" y="865" width="270" height="110"/>
+  <text x="610" y="908" text-anchor="middle" class="boxtitle">MATLAB wrapper</text>
+  <text x="610" y="938" text-anchor="middle" class="body">MASTER_DRIVER_MONITORING_REAL.m</text>
+  <rect class="box green" x="850" y="865" width="270" height="110"/>
+  <text x="985" y="908" text-anchor="middle" class="boxtitle">Python processor</text>
+  <text x="985" y="938" text-anchor="middle" class="body">Feature extraction + CSV output</text>
+  <rect class="box gray" x="1225" y="865" width="270" height="110"/>
+  <text x="1360" y="908" text-anchor="middle" class="boxtitle">Local results</text>
+  <text x="1360" y="938" text-anchor="middle" class="body">CSV summaries and plots</text>
+  <path class="edge" d="M370 920 H465"/><path class="edge" d="M745 920 H840"/><path class="edge" d="M1120 920 H1215"/>
+  <text x="800" y="1020" text-anchor="middle" class="small">Do not publish raw datasets, local biometric data, credentials, or machine-specific manifest paths.</text>
+</svg>

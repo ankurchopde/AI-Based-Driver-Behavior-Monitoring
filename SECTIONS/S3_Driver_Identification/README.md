@@ -1,24 +1,26 @@
 # S3 — Driver identification
 
-The integrated bridge uses the face recognition modules in this section and sends identity state and confidence as part of its 11-value stream to `driver_monitor_sim_identification.slx`. See the [architecture](../../ARCHITECTURE.md) and [main guide](../../README.md) for complete setup.
+S3 enrolls driver templates locally and estimates identity/confidence in the integrated live Python bridge. The resulting ID, confidence, and state occupy the final three values in the 11-value packet sent to the integrated Simulink model.
+
+See the root [README](../../README.md) for end-to-end setup and [ARCHITECTURE.md](../../ARCHITECTURE.md) for the integrated flow.
 
 ## Enroll a driver
 
-From the repository root, install dependencies and run the enrollment utility:
+From the repository root, install the dependencies and run:
 
 ```powershell
-python -m pip install -r requirements.txt
 python INTEGRATED_SYSTEM/Python_UDP_Bridge/live_enrollment.py --id 1 --name "Driver Name" --samples 20
 ```
 
-Choose a unique numeric ID and follow the on-screen capture steps. Enrollment writes `registry.json` and `embeddings.npy` into this section's `database/` directory. The directory is ignored by Git because it contains sensitive biometric data. Without a locally enrolled driver, the integrated system cannot identify that person.
+Use a unique numeric ID. The program captures face samples and stores registry data and embeddings in `SECTIONS/S3_Driver_Identification/database/`. This directory is ignored by Git. Obtain consent and keep this biometric data private. The integrated model reports unknown identity if no usable local enrollment exists.
 
-## Implementation files
+## Code and model files
 
-- `Task3C_Enrollment.py` — enrollment and template creation.
-- `Task3D_Recognition_Core.py` — embedding comparison against enrolled templates.
-- `Task3E_Confidence_Logic.py` — match confidence decisions.
+- `Task3C_Enrollment.py` — enrollment and template generation.
+- `Task3D_Recognition_Core.py` — face embedding extraction and comparison.
+- `Task3E_Confidence_Logic.py` — candidate match/confidence handling.
 - `Task3F_Temporal_Filter.py` — temporal stabilization.
-- `driver_monitor_sim_identification.slx` — integrated model receiving the live telemetry stream.
+- `driver_monitor_sim_identification.slx` — integrated telemetry receiver and status logic.
+- `PROJECT/Models/identification/face_recognizer_fast.onnx` — SFace model used by the integrated bridge.
 
-Recognition thresholds and behavior need validation with representative users and conditions. The prototype is not an access-control or safety-certified identification system.
+Candidate thresholds are implementation settings, not calibrated identity guarantees. This prototype is not an access-control system or a safety-certified biometric system. See [CREDITS.md](../../CREDITS.md) for model attribution.

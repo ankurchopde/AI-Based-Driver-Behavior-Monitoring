@@ -1,17 +1,29 @@
-# S2 — Distraction and attention
+# S2 — Distraction and visual attention
 
-The integrated live path estimates head pose and gaze in the Python bridge and applies distraction logic in the integrated Simulink model. See the [architecture](../../ARCHITECTURE.md) and [main setup guide](../../README.md).
+The integrated system estimates head pose and gaze in the shared Python bridge and applies S2 logic in the integrated model. This folder contains the optional standalone hand-aware S2 demonstration, which has a distinct 14-value packet format.
 
-## Standalone hand-aware demo
+See the root [README](../../README.md) for the integrated startup sequence and safety limitations. The full data-flow diagram is in [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
-This separate path adds hand/wrist cues. From the repository root, install dependencies and start its sender:
+## Standalone files
+
+- `mediapipe_udp_sender.py` — webcam features and 14-value UDP sender.
+- `driver_monitor_sim_distraction.slx` — standalone S2 model.
+- `DistractionLogicSystem.m` — logic used by the standalone and integrated model.
+- `SteeringWheelDashboard.m` — dashboard helper used by the standalone model.
+- `hand_landmarker.task` — hand landmark model asset.
+
+The sender also uses `PROJECT/Models/external_backends/face_landmarker.task`. It sends face presence, EAR/MAR, head pose, gaze, and hand/wrist cues as little-endian doubles to `127.0.0.1:5000`.
+
+## Run the standalone S2 demo
+
+From the repository root:
 
 ```powershell
 python -m pip install -r requirements.txt
 python SECTIONS/S2_Distraction/mediapipe_udp_sender.py
 ```
 
-In MATLAB, add the repository folders and start the matching model:
+Then in MATLAB:
 
 ```matlab
 addpath(genpath(pwd));
@@ -19,4 +31,14 @@ open_system('SECTIONS/S2_Distraction/driver_monitor_sim_distraction.slx');
 set_param('driver_monitor_sim_distraction', 'SimulationCommand', 'start');
 ```
 
-The sender sends a 14-double packet over UDP `127.0.0.1:5000` and needs `SECTIONS/S2_Distraction/hand_landmarker.task` plus the shared face model under `PROJECT/Models/external_backends/`. Do not run this at the same time as the integrated or S1 sender: all use port 5000 and expect different packet formats. Phone detection is not implemented. This is a research demo, not a validated distraction or safety detector.
+Start only one UDP sender at a time. Do not run standalone S2 alongside the integrated bridge or standalone S1 sender: all use port 5000 and the receiving models expect different packet lengths. Phone detection is not implemented.
+
+## Example output
+
+These figures show feature and state traces from a prior demo run. They are illustrative examples, not current dataset metrics or validated distraction detection.
+
+![S2 yaw example](../../results/figures/s2-yaw-demo.png)
+
+![S2 state example](../../results/figures/s2-state-demo.png)
+
+The latest saved batch snapshot has no detected faces or available S2 predictions. See the [results status](../../results/README.md) before interpreting historical graphs.

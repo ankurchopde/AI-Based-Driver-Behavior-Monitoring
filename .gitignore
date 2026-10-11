@@ -48,8 +48,15 @@ data/
 *.mov
 
 # Generated reports, evaluation outputs, logs, and temporary exports
-results/
-Results/
+results/*
+!results/README.md
+!results/figures/
+results/figures/*
+!results/figures/s1-ear-demo.png
+!results/figures/s1-state-demo.png
+!results/figures/s2-yaw-demo.png
+!results/figures/s2-state-demo.png
+!results/figures/integrated-udp-synthetic.png
 Graph/
 Documentation/
 docs/
