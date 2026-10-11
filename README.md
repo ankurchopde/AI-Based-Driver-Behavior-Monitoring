@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![MATLAB: R2023a+](https://img.shields.io/badge/MATLAB-R2023a+-orange.svg)](https://www.mathworks.com/products/matlab.html)
+[![MATLAB](https://img.shields.io/badge/MATLAB-R2023a%2B-orange.svg)](https://www.mathworks.com/products/matlab.html)
 [![Simulink](https://img.shields.io/badge/Simulink-Integrated-red.svg)](https://www.mathworks.com/products/simulink.html)
 
 An end-to-end computer-vision, deep-learning, and edge-telemetry system designed for non-intrusive in-cabin driver monitoring. The system continuously evaluates driver attentiveness, detects physiological drowsiness (eye-closure and yawning), identifies visual/cognitive distraction (head-pose and gaze orientation), and authenticates driver identity (biometric face recognition).
