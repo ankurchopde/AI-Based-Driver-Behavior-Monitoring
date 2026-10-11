@@ -4,6 +4,8 @@ A MATLAB/Simulink and Python prototype for camera-based driver monitoring. It re
 
 ## Architecture
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the system diagram and the distinction between the integrated runtime, standalone section demos, and offline evaluation.
+
 The live system has two processes. `INTEGRATED_SYSTEM/Python_UDP_Bridge/master_driver_monitor_udp.py` reads a webcam or video, extracts face landmarks, EAR/MAR, head pose and gaze, performs SFace driver recognition, and sends 11 double-precision telemetry values over UDP port 5000. The Simulink model `SECTIONS/S3_Driver_Identification/driver_monitor_sim_identification.slx` receives the stream and applies temporal drowsiness/distraction logic and visual status output. The model uses `SECTIONS/S2_Distraction/DistractionLogicSystem.m` for its distraction subsystem.
 
 The three functions implemented in the live bridge are:

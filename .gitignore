@@ -96,6 +96,7 @@ desktop.ini
 /EXECUTION_GUIDE.md
 /RELEASE_MANIFEST.md
 INTEGRATED_SYSTEM/*.md
+!INTEGRATED_SYSTEM/README.md
 INTEGRATED_SYSTEM/*.m
 !INTEGRATED_SYSTEM/MASTER_DRIVER_MONITORING_REAL.m
 INTEGRATED_SYSTEM/Python_UDP_Bridge/attention_diagnostic.py
@@ -105,14 +106,19 @@ INTEGRATED_SYSTEM/Python_UDP_Bridge/live_recognition.py
 PROJECT/Models/external_backends/face_recognizer_fast.onnx
 
 # Development-only folders retained locally for backward compatibility
-SECTIONS/S1_Drowsiness/
+SECTIONS/S1_Drowsiness/*
+!SECTIONS/S1_Drowsiness/README.md
+!SECTIONS/S1_Drowsiness/mediapipe_udp_sender.py
+!SECTIONS/S1_Drowsiness/driver_monitor_sim_mediapipe.slx
 SECTIONS/S2_Distraction/*
+!SECTIONS/S2_Distraction/README.md
 !SECTIONS/S2_Distraction/DistractionLogicSystem.m
 !SECTIONS/S2_Distraction/hand_landmarker.task
 !SECTIONS/S2_Distraction/SteeringWheelDashboard.m
 !SECTIONS/S2_Distraction/driver_monitor_sim_distraction.slx
 !SECTIONS/S2_Distraction/mediapipe_udp_sender.py
 SECTIONS/S3_Driver_Identification/*.md
+!SECTIONS/S3_Driver_Identification/README.md
 SECTIONS/S3_Driver_Identification/*.m
 SECTIONS/S3_Driver_Identification/*.py
 !SECTIONS/S3_Driver_Identification/Task3C_Enrollment.py
