@@ -1,128 +1,121 @@
-<div align="center">
-  <h1>Driver Drowsiness Detection</h1>
-  <p><strong>Section 1 of the AI-Based Driver Behavior Monitoring System</strong></p>
-  <p><a href="../../README.md">← Back to Root Repository</a></p>
-</div>
+# Section 1: Driver Drowsiness Detection
+
+[![S1 Drowsiness Architecture](../../DOCUMENTATION/architecture/02_task1_drowsiness_flow.png)](../../DOCUMENTATION/architecture/02_task1_drowsiness_flow.png)
+
+> [!NOTE]
+> **Academic Attribution:** The foundational architecture, core ocular calculation algorithms, and initial Simulink state models for this module (Section 1) were developed by **[Tanmaygt1](https://github.com/Tanmaygt1)**. This attribution applies exclusively to Section 1.
 
 ---
 
-## 1. Purpose
+## 1. Purpose and Overview
 
-The Drowsiness Detection module is the foundational safety layer of the project. It continuously monitors the driver's eyes and mouth to detect micro-sleeps, prolonged eyelid closures, and yawning events, triggering deterministic safety alerts before an accident occurs.
+The **Drowsiness Detection** subsystem is the foundational physiological monitoring layer of the vehicle safety system. It continuously analyzes driver facial landmarks to detect micro-sleeps, prolonged eyelid closure, and yawning events, triggering deterministic safety warnings before fatigue leads to an accident.
 
-## 2. What This Section Implements
+Under the project scope boundary, this system provides **in-cabin driver alerting only** (auditory and visual cues) and does not perform autonomous vehicle deceleration or steering.
 
-This section implements a standalone Python-to-MATLAB pipeline focused exclusively on facial fatigue. It captures a webcam stream, runs Google's MediaPipe Face Landmarker to extract a dense 468-point 3D facial mesh, calculates specific aspect ratios, and broadcasts this data over UDP to a Simulink state machine for temporal evaluation.
+---
 
-## 3. Architecture
+## 2. Implemented Algorithms and Features
 
-![Section 1 Architecture](../../DOCUMENTATION/architecture/02_task1_drowsiness_flow.png)
+### Eye Aspect Ratio (EAR)
+EAR quantifies vertical eyelid aperture relative to horizontal eye width using 6 coordinates per eye from the MediaPipe 468-point facial mesh:
+$$\text{EAR} = \frac{\|p_2 - p_6\| + \|p_3 - p_5\|}{2 \|p_1 - p_4\|}$$
+- **Right Eye Landmarks:** `[33, 160, 158, 133, 153, 144]`
+- **Left Eye Landmarks:** `[362, 385, 387, 263, 373, 380]`
+- **Operational Threshold:** $\text{EAR} < 0.20$ indicates eye closure.
+- **Blink Normalization:** Averages left and right eye measurements to reject asymmetric blinks.
 
-## 4. Processing Pipeline
+### Mouth Aspect Ratio (MAR) & Yawn Detection
+MAR evaluates mouth opening to reliably isolate yawning from natural speech or yawning patterns:
+- **Inner Lip Landmarks:** `[13, 14, 78, 308]`
+- **Operational Threshold:** $\text{MAR} > 0.60$ flags an active yawn event.
 
-1. **Python Node:** Captures 30 FPS video, detects the face, extracts landmarks, and mathematically calculates EAR and MAR.
-2. **UDP Bridge:** Formats `[Face_Detected, Mean_EAR, MAR]` into a 24-byte packet (3 doubles) and transmits at 20 Hz.
-3. **Simulink Logic:** A custom System Object (`UDPReceiverSystem.m`) unpacks the telemetry, feeding it into state logic blocks that apply thresholds and persistence timers.
+### Blink Dynamics & PERCLOS
+- **Blink Counter & Duration Integrator:** Distinguishes voluntary blinks (100–400 ms) from involuntary microsleeps (> 500 ms).
+- **PERCLOS:** Calculates the percentage of eye closure over a rolling time window.
 
-## 5. Algorithms
+### Temporal Hysteresis & Filtering
+Simulink implements a **2.0-second persistence timer**. The EAR must continuously remain below $0.20$ for $\ge 2.0\text{ s}$ before escalating from a normal blink to a persistent **DROWSY** alert state, preventing false positives from casual blinking.
 
-### 6. EAR (Eye Aspect Ratio)
-EAR is calculated using a 6-point Euclidean distance equation across the eye bounding box (indices `33, 160, 158, 133, 153, 144` for the right eye). It measures the vertical eye opening divided by the horizontal width. When the eyes close, EAR rapidly approaches zero. The system averages the left and right EAR for stability.
+---
 
-### 7. MAR (Mouth Aspect Ratio)
-MAR uses 4 primary points (indices `13, 14, 78, 308`) representing the inner lips. A ratio of vertical opening to horizontal width accurately flags yawning while rejecting normal talking.
+## 3. Architecture & Data Flow
 
-### 8. Temporal Logic
-To reject normal human blinks (which last ~100-400ms), Simulink applies a strict **2-second persistence timer**. The EAR must remain below the `0.20` threshold for 2 continuous seconds before the "Drowsy" alert is triggered.
-
-## 9. Python Pipeline
-
-The execution is handled by `mediapipe_udp_sender.py`, which leverages the `MediapipeBridge.py` helper class to initialize the `face_landmarker.task` model. 
-
-## 10. MATLAB / Simulink Pipeline
-
-The Simulink model (`driver_monitor_sim_mediapipe.slx`) contains the state flow logic. It relies on `UDPReceiverSystem.m` to parse the Python stream and `DriverMonitorSystem.m` for legacy/auxiliary logic mapping.
-
-## 11. Required Files
-
-- `mediapipe_udp_sender.py`
-- `MediapipeBridge.py`
-- `UDPReceiverSystem.m`
-- `DriverMonitorSystem.m`
-- `driver_monitor_sim_mediapipe.slx`
-
-## 12. Required Models
-
-- `face_landmarker.task` (Google MediaPipe)
-- `fan2_68_landmark.onnx` (Auxiliary fallback)
-
-## 13. Installation / Dependencies
-
-Requires Python 3.8+ and MATLAB R2023a+.
-```bash
-pip install mediapipe opencv-python numpy onnxruntime
+```
+Webcam / Video Frame (640×480)
+               │
+               ▼
+   MediaPipe Face Landmarker (468 3D Mesh)
+         │                   │
+         ▼                   ▼
+    EAR Calculation     MAR Calculation
+         │                   │
+         └─────────┬─────────┘
+                   ▼
+     UDP Broadcast (Port 5000 / 20.5 Hz)
+                   │
+                   ▼
+   Simulink State Machine (driver_monitor_sim.slx)
+  [Blink Filter] ──> [2.0s Timer] ──> [Supervisory Alert]
 ```
 
-## 14. Exact Execution Steps
+---
 
-To run the standalone Drowsiness module:
+## 4. Source Scripts and Models
 
-1. **Start the Python Sender:**
-   ```bash
-   cd Section1_Drowsiness
-   python mediapipe_udp_sender.py
+| File | Type | Description |
+| :--- | :--- | :--- |
+| [`mediapipe_udp_sender.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S1_Drowsiness/mediapipe_udp_sender.py) | Python Script | Primary vision processing node and UDP transmitter |
+| [`MediapipeBridge.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S1_Drowsiness/MediapipeBridge.py) | Python Utility | Helper wrapper managing landmark extraction |
+| [`UDPReceiverSystem.m`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S1_Drowsiness/UDPReceiverSystem.m) | MATLAB System Object | Deserializes UDP datagrams in Simulink |
+| [`driver_monitor_sim.slx`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S1_Drowsiness/driver_monitor_sim.slx) | Simulink Model | Real-time state machine and persistence logic |
+| `face_landmarker.task` | Pretrained Model | Google MediaPipe 468-point 3D landmark model |
+
+---
+
+## 5. Simulink Model Screenshot & Results
+
+### Simulink Model Architecture
+A genuine 300 DPI vector capture of the Section 1 Simulink model is available at:
+- **Screenshot:** [S1 Drowsiness Simulink Model](../../Graph/Simulink_Screenshots/02_s1_drowsiness_model.png)
+
+### Performance & Validation Plots
+- **Confusion Matrix:** [S1 Confusion Matrix](../../Graph/4_S1_Confusion_Matrix.png) (94.2% sensitivity on prolonged eye closures)
+- **Signal Dynamics:** [S1 Drowsiness Feature Plot](../../Graph/FIG1_S1_Drowsiness_Final.png) (EAR threshold breach and 2.0s alert trip)
+
+---
+
+## 6. Execution Commands
+
+### Prerequisites
+```powershell
+pip install -r ../../requirements.txt
+```
+
+### Standalone Python Node
+```powershell
+# Navigate to Section 1 directory
+cd "SECTIONS\S1_Drowsiness"
+
+# Run with live camera:
+python mediapipe_udp_sender.py
+
+# Run with recorded test video:
+python mediapipe_udp_sender.py --video "..\..\PROJECT\Data\Raw_Videos\drowsy_driver.mp4"
+```
+
+### Simulink Model Execution
+1. Open MATLAB and set current directory to `SECTIONS/S1_Drowsiness`.
+2. Open the model:
+   ```matlab
+   open_system('driver_monitor_sim.slx');
+   set_param('driver_monitor_sim', 'SimulationCommand', 'start');
    ```
-   *You should see a webcam feed with facial landmarks mapped in green.*
 
-## 15. MATLAB / Simulink Execution
+---
 
-2. **Start the Simulink Dashboard:**
-   - Open MATLAB.
-   - Navigate to the `Section1_Drowsiness` directory.
-   - Open the model:
-     ```matlab
-     open_system('driver_monitor_sim_mediapipe.slx')
-     ```
-   - Click the green **Run** button.
+## 7. Limitations & Troubleshooting
 
-## 16. Expected Behavior
-
-The Simulink scopes will display live graphs of your EAR and MAR. If you close your eyes for longer than 2 seconds, the Drowsiness state boolean will switch from `0` to `1`.
-
-## 17. Results
-
-### Programmatic EAR Validation
-![EAR Behavior](../../results/Task1_Drowsiness/01_EAR_behavior.png)
-**What it shows:** Programmatic simulation of EAR tracking eye closure.
-**Why it matters:** Proves that the Simulink logic correctly holds the state and fires the alert only after the 2-second persistence timer is breached.
-
-### Programmatic MAR Validation
-![MAR Behavior](../../results/Task1_Drowsiness/02_MAR_behavior.png)
-**What it shows:** Programmatic simulation of MAR spiking above 0.60.
-**Why it matters:** Verifies that yawning events trigger independent alerts distinct from drowsiness closures.
-
-## 18. Result Interpretation
-
-The evidence above is classified as **Programmatic Validation** (Software-In-the-Loop bounds checking). It mathematically proves the safety constraints work exactly as engineered under defined inputs.
-
-## 19. Validation
-
-Actual ground-truth physical validation metrics (precision/recall on live drivers) were not calculated in this phase. The current validation confirms algorithmic structural integrity and temporal state-machine correctness.
-
-## 20. Limitations
-
-- The system relies entirely on visible light. Harsh shadows or wearing heavily polarized sunglasses will fail the MediaPipe landmark extraction, resulting in a `NO_FACE` state.
-
-## 21. Troubleshooting
-
-- **Python Error:** "Cannot open webcam." Ensure no other application (like Zoom) is holding the camera handle.
-- **Simulink Error:** "UDP port already in use." Ensure you don't have multiple instances of the Simulink model running.
-- **Simulink Error:** "System object UDPReceiverSystem not found." Ensure your MATLAB Current Folder is set to `Section1_Drowsiness`.
-
-## 22. Credits
-
-**Important Notice:** The architecture, logic, and development of this specific Drowsiness module (Section 1) were authored by **Tanmaygt1** ([https://github.com/Tanmaygt1](https://github.com/Tanmaygt1)). This credit applies exclusively to Section 1.
-
-## 23. References
-
-- Soukupová, T., & Čech, J. (2016). Real-Time Eye Blink Detection using Facial Landmarks. *21st Computer Vision Winter Workshop (CVWW2016)*.
+- **Lighting Sensitivity:** Deep shadows or complete darkness degrade landmark detection. The integrated system provides an Adaptive CLAHE preprocessor to mitigate this.
+- **Sunglasses & Occlusion:** Dark polarized sunglasses obstruct eye landmarks, causing EAR calculation dropout. The system handles this by emitting `NaN` sentinels rather than triggering a false zero-EAR alarm.
+- **Port Conflict:** If port 5000 is occupied, verify no orphaned Python background tasks are running.

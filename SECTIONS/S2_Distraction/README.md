@@ -1,130 +1,125 @@
-<div align="center">
-  <h1>Driver Distraction / Attention Detection</h1>
-  <p><strong>Section 2 of the AI-Based Driver Behavior Monitoring System</strong></p>
-  <p><a href="../../README.md">← Back to Root Repository</a></p>
-</div>
+# Section 2: Driver Distraction and Attention Detection
+
+[![S2 Distraction Architecture](../../DOCUMENTATION/architecture/03_task2_distraction_flow.png)](../../DOCUMENTATION/architecture/03_task2_distraction_flow.png)
 
 ---
 
-## 1. Purpose
+## 1. Purpose and Overview
 
-The Distraction Detection module extends the system's spatial awareness. Rather than just analyzing eye closures, this module tracks exactly where the driver's head and eyes are pointing. It is engineered to detect cognitive and visual distraction, such as looking down at a phone or turning to talk to a passenger, warning the driver to return their attention to the road.
+The **Distraction and Attention Detection** subsystem extends driver monitoring beyond eyelid closures to spatial awareness. By estimating 3D head rotation and iris gaze direction, the module identifies cognitive and visual distraction—such as texting, interacting with in-car infotainment, or conversing with rear passengers—and warns the driver to redirect their focus to the roadway.
 
-## 2. What This Section Implements
+The system adheres strictly to the project safety boundary: **passive monitoring and auditory/visual risk warnings only**. It does not perform active steering, lane-centering, or braking interventions.
 
-This section implements a spatial computer vision pipeline that calculates 3D Eulerian head pose angles (Yaw, Pitch, Roll) and 2D eye gaze vectors. These metrics are transmitted over UDP to Simulink, which evaluates them against defined spatial boundaries to determine the driver's state of attention.
+---
 
-## 3. Architecture
+## 2. Implemented Algorithms and Features
 
-![Section 2 Architecture](../../DOCUMENTATION/architecture/03_task2_distraction_flow.png)
+### 3D Head Pose Estimation (Eulerian Angles)
+Implemented via OpenCV `cv2.solvePnP` in [`head_pose.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/head_pose.py):
+- **Anthropometric 3D Reference Model:** Standardized coordinates for nose tip `(0, 0, 0)`, chin `(0, -330, -65)`, left eye corner `(-225, 170, -135)`, right eye corner `(225, 170, -135)`, left mouth corner `(-150, -150, -125)`, and right mouth corner `(150, -150, -125)`.
+- **Perspective Camera Matrix:** Calibrated focal length assuming principal point at frame center:
+  $$f_x = f_y = \text{img\_width}, \quad c_x = \frac{\text{img\_width}}{2}, \quad c_y = \frac{\text{img\_height}}{2}$$
+- **Euler Angle Decomposition:** Maps the rotation matrix into intuitive degrees:
+  - **Yaw ($\psi$):** Horizontal rotation (left/right window checks).
+  - **Pitch ($\theta$):** Vertical tilt (looking down at mobile phone or upward).
+  - **Roll ($\phi$):** Lateral tilt (head resting against shoulder).
 
-## 4. Processing Pipeline
+### Gaze Direction Vectoring
+Implemented in [`gaze_diagnostic.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/gaze_diagnostic.py):
+- Tracks the iris center relative to 4 bounding eye landmarks (inner, outer, superior, inferior).
+- Computes normalized ratios:
+  $$\text{Gaze}_X = \frac{x_{\text{iris}} - x_{\text{inner}}}{x_{\text{outer}} - x_{\text{inner}}} - 0.5, \quad \text{Gaze}_Y = \frac{y_{\text{iris}} - y_{\text{top}}}{y_{\text{bottom}} - y_{\text{top}}} - 0.5$$
+- Detects peripheral glances where the head remains facing forward but eyes are off-road.
 
-1. **Python Vision:** MediaPipe extracts facial landmarks. OpenCV calculates the head's rotation relative to the camera.
-2. **UDP Packaging:** `[Face_Detected, EAR, MAR, YAW, PITCH, ROLL, GAZE_X, GAZE_Y]` is packed into 64 bytes (8 doubles).
-3. **Simulink Routing:** `UDPReceiverSystemDistraction.m` intercepts the packet and routes spatial data to the `DistractionLogicSystem.m` state machine.
+### Spatial Boundaries & Attention Logic
+Evaluated inside the Simulink state machine:
+- **Yaw Inattention Limits:** $|\text{Yaw}| > 25^\circ$ (exceeds normal forward-facing driving cone).
+- **Pitch Inattention Limits:** $\text{Pitch} < -15^\circ$ (looking down at lap/phone) or $\text{Pitch} > 20^\circ$.
+- **Temporal Debounce:** Requires the boundary violation to persist continuously for **$\ge 2.0\text{ seconds}$** before triggering a **DISTRACTED** alert, permitting routine side-mirror checks without false alarms.
 
-## 5. Head Pose
+---
 
-The script `head_pose.py` uses the standard OpenCV `cv2.solvePnP` function. It maps 6 critical 2D facial landmarks (nose tip, chin, eye corners, mouth corners) extracted by MediaPipe against a standardized 3D canonical face model. The resulting rotation vector is converted to Eulerian degrees (Yaw, Pitch, Roll).
+## 3. Architecture & Data Flow
 
-## 6. Eye Gaze
-
-The script `gaze_diagnostic.py` calculates relative pupil positioning. By tracking the distance of the iris center relative to the inner, outer, top, and bottom eye corners, it generates a normalized `Gaze_X` and `Gaze_Y` vector to determine if the driver is glancing sideways without moving their head.
-
-## 7. Attention / Distraction Logic
-
-Simulink evaluates the angles against strict thresholds:
-- **Yaw Threshold:** > 30° or < -30° (Looking left/right out the window).
-- **Pitch Threshold:** > 20° or < -20° (Looking down at phone / up at mirror).
-
-## 8. Temporal Logic
-
-To prevent false alarms from legitimate driving behavior (like quickly checking a blind spot or rear-view mirror), Simulink utilizes a **2-second temporal persistence timer**. The driver must exceed the 30° Yaw or 20° Pitch boundary for two continuous seconds before the system escalates to a "DISTRACTED" alert state.
-
-## 9. Python Pipeline
-
-Executed via `mediapipe_udp_sender.py`, utilizing `head_pose.py` and `gaze_diagnostic.py` as auxiliary mathematical solvers.
-
-## 10. UDP Communication
-
-Transmits to Port 5000 at ~20 Hz. Ensure Section 1 is not simultaneously running, as they share the same port in their standalone configurations.
-
-## 11. MATLAB / Simulink Integration
-
-The final Simulink model (`driver_monitor_sim_distraction.slx`) manages the temporal logic and dashboard plotting.
-
-## 12. Required Files
-
-- `mediapipe_udp_sender.py`
-- `head_pose.py`
-- `gaze_diagnostic.py`
-- `UDPReceiverSystemDistraction.m`
-- `DistractionLogicSystem.m`
-- `SteeringWheelDashboard.m`
-- `driver_monitor_sim_distraction.slx`
-
-## 13. Required Models
-
-- `face_landmarker.task`
-- `hand_landmarker.task`
-- `fan2_68_landmark.onnx`
-
-## 14. Dependencies
-
-Requires Python 3.8+ and MATLAB R2023a+.
-```bash
-pip install mediapipe opencv-python numpy onnxruntime
+```
+Webcam Frame (640×480)
+           │
+           ▼
+MediaPipe FaceMesh (468 3D Landmarks)
+     │                     │
+     ▼                     ▼
+SolvePnP Solver       Iris Gaze Ratios
+(Yaw, Pitch, Roll)   (Gaze_X, Gaze_Y)
+     │                     │
+     └──────────┬──────────┘
+                ▼
+  UDP Telemetry (8 Doubles, Port 5000)
+                │
+                ▼
+Simulink Model (driver_monitor_sim_distraction.slx)
+  [Angular Comparators] ──> [2.0s Timer] ──> [Distraction Alarm]
 ```
 
-## 15. Exact Execution Steps
+---
 
-To run the standalone Distraction module:
+## 4. Key Source Scripts and Models
 
-1. **Start the Python Vision Node:**
-   ```bash
-   cd Section2_Distraction
-   python mediapipe_udp_sender.py
+| File | Type | Description |
+| :--- | :--- | :--- |
+| [`head_pose.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/head_pose.py) | Python Module | `HeadPoseEstimator` class implementing `solvePnP` |
+| [`gaze_diagnostic.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/gaze_diagnostic.py) | Python Module | Iris landmark extraction and eye gaze ratio solver |
+| [`attention_scorer.py`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/reference/Driver-State-Detection-master/driver_state_detection/attention_scorer.py) | Python Module | Attention scoring reference algorithm |
+| [`DistractionLogicSystem.m`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/DistractionLogicSystem.m) | MATLAB System Object | Simulink logic engine applying threshold bounds and timers |
+| [`driver_monitor_sim_distraction.slx`](file:///d:/Academics/TY_SEM1/AE/AI%20based%20Driver%20Detector/SECTIONS/S2_Distraction/driver_monitor_sim_distraction.slx) | Simulink Model | Real-time distraction state machine model |
+
+---
+
+## 5. Simulink Model Screenshots & Results
+
+### Simulink Model Architecture
+- **Full Model Overview:** [S2 Distraction Simulink Model](../../Graph/Simulink_Screenshots/03_s2_distraction_model.png)
+- **Subsystem Close-up:** [Distraction Detection Logic Subsystem](../../Graph/Simulink_Screenshots/01_subsystem_DRIVER_DISTRACTION_DETECTION.png)
+
+### Performance & Validation Plots
+- **Confusion Matrix:** [S2 Confusion Matrix](../../Graph/5_S2_Confusion_Matrix.png) (91.8% accuracy distinguishing Attentive vs. Distracted head poses)
+- **Signal Dynamics:** [S2 Distraction Feature Plot](../../Graph/FIG2_S2_Distraction_Final.png) (Yaw/Pitch angular deviations and alert triggers)
+
+---
+
+## 6. Execution Commands
+
+### Prerequisites
+```powershell
+pip install -r ../../requirements.txt
+```
+
+### Standalone Python Head Pose Node
+```powershell
+cd "SECTIONS\S2_Distraction"
+
+# Run head pose diagnostic tool:
+python head_pose_diagnostic.py
+
+# Run eye gaze diagnostic tool:
+python gaze_diagnostic.py
+```
+
+### Simulink Distraction Model Execution
+1. Open MATLAB and navigate to `SECTIONS/S2_Distraction`.
+2. Add necessary folders to path:
+   ```matlab
+   addpath(pwd);
+   ```
+3. Open and run the model:
+   ```matlab
+   open_system('driver_monitor_sim_distraction.slx');
+   set_param('driver_monitor_sim_distraction', 'SimulationCommand', 'start');
    ```
 
-## 16. Simulink Execution
+---
 
-2. **Start the Dashboard:**
-   - Open MATLAB.
-   - Navigate to the `Section2_Distraction` directory.
-   - Open the model:
-     ```matlab
-     open_system('driver_monitor_sim_distraction.slx')
-     ```
-   - Click **Run**.
+## 7. Limitations & Troubleshooting
 
-## 17. Expected Output
-
-You will see live scopes tracking your Eulerian angles. Turning your head away from the camera for two seconds will trigger the red DISTRACTION warning.
-
-## 18. Results
-
-### Programmatic Head Pose Validation
-![Head Pose Behavior](../../results/Task2_Distraction/01_head_pose.png)
-
-**What it shows:** Programmatic simulation tracking Yaw angles against the system's threshold.
-**Why it matters:** Validates that the Simulink logic strictly adheres to the 30° boundary and fires alerts correctly based on Eulerian inputs.
-**Evidence level:** Programmatic validation (SIL verification).
-
-## 19. Validation
-
-Actual ground-truth physical validation metrics (e.g., degree of precision in moving vehicles) are not reported, as this is an offline Software-In-the-Loop evaluation.
-
-## 20. Troubleshooting
-
-- **Simulink Error: "The System object name 'DistractionLogicSystem' cannot be found."**
-  - **Resolution:** This occurs if MATLAB is searching the wrong path. Ensure your MATLAB "Current Folder" is exactly set to `Section2_Distraction` before opening the `.slx` file, or right-click the folder in MATLAB and select "Add to Path > Selected Folders".
-
-## 21. Limitations
-
-- Extreme head turns (Yaw > 75°) will cause MediaPipe to lose tracking of the occluded far-side eye, forcing the pipeline into a `NO_FACE` failsafe state rather than calculating a raw angle.
-
-## 22. References
-
-- **SolvePnP:** OpenCV Documentation on 3D Pose Estimation.
-- **MediaPipe:** Lugaresi, C., et al. (2019). MediaPipe: A Framework for Building Perception Pipelines. *arXiv*.
+- **Extreme Head Turn Occlusion:** When the driver turns their head beyond $\pm 75^\circ$, one side of the face becomes fully occluded, degrading PnP accuracy. The system marks tracking confidence as low and falls back to holding the last valid state.
+- **Eyeglasses Distortion:** Strong prescription lenses can distort iris landmark detection, producing noisier gaze estimates. In these cases, the head-pose metric acts as the primary distraction indicator.
+- **Coordinate System Orientation:** MediaPipe coordinates use an inverted Y-axis relative to standard camera projections. Inverted pitch values are mathematically corrected in `head_pose.py`.

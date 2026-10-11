@@ -1,0 +1,96 @@
+graph TB
+    subgraph SENSORS["1. Vision Input & Normalization"]
+        CAM["Live RGB Camera (640x480 @ 30 FPS)<br/>or Recorded Video File"]
+        CLAHE["Adaptive CLAHE Preprocessing<br/>(L-channel in LAB, Clip: 2.0, Grid: 8x8)"]
+        CAM --> CLAHE
+    end
+
+    subgraph PYTHON["2. Python Computer Vision Engine (MediaPipe FaceMesh & Deep Models)"]
+        FM["MediaPipe FaceMesh (468/478 Landmarks)"]
+        CLAHE --> FM
+
+        subgraph S1["S1: Drowsiness Detection"]
+            EAR["Eye Aspect Ratio (EAR) Thresholding"]
+            BLINK["Blink Frequency & Duration Counter"]
+            MAR["Mouth Aspect Ratio (MAR) / Yawn Detector"]
+            PERCLOS["Temporal PERCLOS Integrator"]
+            FM --> EAR
+            FM --> MAR
+            EAR --> BLINK
+            BLINK --> PERCLOS
+        end
+
+        subgraph S2["S2: Distraction & Attention Detection"]
+            POSE["SolvePnP 3D Head Pose (Yaw, Pitch, Roll)"]
+            GAZE["Iris Landmark Pupil Tracking (Gaze X, Gaze Y)"]
+            ATTN["Attention Scorer & Off-Road Zone Evaluator"]
+            FM --> POSE
+            FM --> GAZE
+            POSE --> ATTN
+            GAZE --> ATTN
+        end
+
+        subgraph S3["S3: Driver Identification"]
+            CROP["Face Normalization & 160x160 Alignment"]
+            FACENET["FaceNet 128-D Feature Extractor"]
+            DIST["Cosine Distance vs. Enrolled Registry"]
+            TEMP_S3["10-Frame Temporal Persistence Filter"]
+            FM --> CROP
+            CROP --> FACENET
+            FACENET --> DIST
+            DIST --> TEMP_S3
+        end
+    end
+
+    subgraph UDP["3. Real-Time UDP Telemetry Bridge (127.0.0.1:25000 @ 20.5 Hz)"]
+        PKT["Binary Struct Pack ('<11d', 88 Bytes)<br/>• Face_Detected (0 or 1)<br/>• EAR, MAR<br/>• Yaw, Pitch, Roll (deg)<br/>• Gaze_X, Gaze_Y<br/>• Driver_ID, ID_Confidence, ID_State<br/>(NaN Sentinels on Face Loss)"]
+    end
+
+    S1 --> PKT
+    S2 --> PKT
+    S3 --> PKT
+
+    subgraph SIMULINK["4. MATLAB / Simulink Integrated System (driver_monitor_sim_identification.slx)"]
+        UDP_RECV["UDP Receive Block (Port 25000, 11 Doubles)"]
+        DEMUX["Demux (11 Channels)"]
+        NAN_CHECK["NaN Safe Guard Filter"]
+        DROWSY_LOGIC["Drowsiness Temporal Logic<br/>(Blink Duration, Yawn Integrator)"]
+        DISTRACT_SM["Distraction State Machine<br/>(Attentive, Inattentive, Eye-Closed)"]
+        ID_LOGIC["Driver Authorization Logic<br/>(Known Driver vs. Unknown Lockout)"]
+        SUPERVISOR["Supervisory Multi-Level Alert Logic"]
+        SCOPES["Real-Time Diagnostic Scopes & Time Logs"]
+
+        PKT --> UDP_RECV
+        UDP_RECV --> DEMUX
+        DEMUX --> NAN_CHECK
+        NAN_CHECK --> DROWSY_LOGIC
+        NAN_CHECK --> DISTRACT_SM
+        NAN_CHECK --> ID_LOGIC
+        DROWSY_LOGIC --> SUPERVISOR
+        DISTRACT_SM --> SUPERVISOR
+        ID_LOGIC --> SUPERVISOR
+        SUPERVISOR --> SCOPES
+    end
+
+    subgraph OUTPUTS["5. Warning & Status Outputs"]
+        LVL0["Level 0: Attentive & Authorized"]
+        LVL1["Level 1: Caution (Brief Inattention)"]
+        LVL2["Level 2: Warning (Persistent Distraction)"]
+        LVL3["Level 3: Critical (Drowsiness / Microsleep)"]
+        LOCK["Unknown Driver Interlock"]
+        SUPERVISOR --> LVL0
+        SUPERVISOR --> LVL1
+        SUPERVISOR --> LVL2
+        SUPERVISOR --> LVL3
+        SUPERVISOR --> LOCK
+    end
+
+    subgraph OFFLINE["Offline Dataset Evaluation & Training Track"]
+        DATA["Public Datasets: RLDD, YawDD, State Farm"]
+        BENCH["Confusion Matrices & Lighting Robustness Benchmark"]
+        DATA --> BENCH
+    end
+
+    subgraph EDGE["[FUTURE EXTENSION] Edge AI Hardware Deployment (Not Yet Deployed)"]
+        RPI["Raspberry Pi 4/5 (ARM Cortex-A76) + Pi Camera V2/V3<br/>• Optimized C++ / ONNX Runtime INT8<br/>• Target: 18-25 FPS<br/>• Passive CAN-Bus Warning Interlock Only<br/>• STRICT BOUNDARY: Zero Autonomous Vehicle Control"]
+    end
