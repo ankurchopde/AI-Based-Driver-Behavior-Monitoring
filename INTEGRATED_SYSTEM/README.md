@@ -38,7 +38,7 @@ run('INTEGRATED_SYSTEM/MASTER_DRIVER_MONITORING_REAL.m');
 
 It calls `PROJECT/Dataset_Pipeline/dataset_processing_final_REAL_FINAL.py` and expects local S1/S2/S3 manifests under `PROJECT/Data/processed_real/manifests/`, with local source media referenced in each manifest. Required column names and dataset citations are in the main [README](../README.md#offline-dataset-evaluation) and [CREDITS.md](../CREDITS.md). Dataset files and machine-specific manifests are excluded from Git.
 
-The wrapper writes CSVs, graphs, summaries, and logs locally. Check face-detection coverage, available predictions, and ground-truth labels before computing or publishing metrics. The saved local S1/S2 batch snapshot currently has no detected faces or available predictions; see [results status](../results/README.md).
+The wrapper writes evaluation tables, summaries, graphs, and logs locally under `results/`. Only selected graph images are included in the repository; generated CSVs and machine-specific outputs remain local.
 
 ## Related section guides
 

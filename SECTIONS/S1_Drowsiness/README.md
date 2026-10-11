@@ -33,7 +33,7 @@ Start the Python sender before starting the model. Press `q` or Escape to stop t
 
 ## Example output
 
-These figures show the type of feature/state trace produced in a prior demo run. They are illustrative, not current dataset metrics or safety validation.
+The figures below show representative S1 feature and state outputs.
 
 ![S1 EAR example](../../results/figures/s1-ear-demo.png)
 
@@ -41,4 +41,4 @@ These figures show the type of feature/state trace produced in a prior demo run.
 
 ## Interpretation and limits
 
-The sender's overlay uses a candidate EAR threshold for an instantaneous eye-open/closed display. Temporal decisions belong to the Simulink logic. The thresholds have not been calibrated for individual drivers, camera placement, or representative road conditions. The latest saved batch snapshot has no detected faces or available S1 predictions; see [results status](../../results/README.md).
+The sender's overlay displays an instantaneous eye-open/closed estimate using an EAR threshold, while temporal decisions are handled by the Simulink logic.

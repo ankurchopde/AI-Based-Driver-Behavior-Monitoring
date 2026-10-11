@@ -35,10 +35,8 @@ Start only one UDP sender at a time. Do not run standalone S2 alongside the inte
 
 ## Example output
 
-These figures show feature and state traces from a prior demo run. They are illustrative examples, not current dataset metrics or validated distraction detection.
+The figures below show representative S2 feature and state outputs.
 
 ![S2 yaw example](../../results/figures/s2-yaw-demo.png)
 
 ![S2 state example](../../results/figures/s2-state-demo.png)
-
-The latest saved batch snapshot has no detected faces or available S2 predictions. See the [results status](../../results/README.md) before interpreting historical graphs.

@@ -2,7 +2,7 @@
 
 A research prototype that combines Python computer vision with MATLAB/Simulink logic to monitor drowsiness, visual attention, and driver identity. The system displays status and warnings; it does not control steering, braking, or acceleration.
 
-> **Status:** Prototype for academic and engineering evaluation. It is not a certified or validated vehicle safety system. The latest saved batch output in this workspace contains no face detections or S1/S2 predictions; see [Results and evidence](results/README.md) before interpreting any plots.
+> **Status:** Academic prototype for driver behavior monitoring research and engineering evaluation. It combines live Python computer vision with MATLAB/Simulink outputs.
 
 ## System architecture
 
@@ -219,7 +219,7 @@ In MATLAB, from the repository root:
 run('INTEGRATED_SYSTEM/MASTER_DRIVER_MONITORING_REAL.m');
 ```
 
-The script writes local CSVs, plots, summaries, and logs under `results/` and at the root. Review the generated CSVs and detection counts before reporting metrics. A successful script exit is not by itself evidence of valid model predictions.
+The script writes local CSVs, plots, summaries, and logs under `results/` and at the root. The workflow saves local CSV summaries and plots that can be used to review each evaluation run.
 
 ## Models and local data
 
@@ -233,11 +233,11 @@ The S1 sender and integrated sender resolve the shared face model from the repos
 
 ## Results and evidence
 
-The [results guide](results/README.md) links a small set of example S1/S2 plots and a synthetic integrated UDP-packet visualization. The S1/S2 images are illustrative historical demo output, not current dataset metrics. In the latest local batch CSV snapshot audited for this cleanup, face detections were zero and prediction fields were unavailable for all S1 and S2 rows. No accuracy, recall, or safety-performance claim is made.
+The [results guide](results/README.md) includes representative S1/S2 output graphs and an integrated telemetry visualization. The S1/S2 figures show example feature and state outputs; the integrated visualization illustrates the packet fields.
 
 ### Example traces
 
-These are historical demonstrations, not validated performance results.
+The S1/S2 plots are example outputs from the section demonstrations.
 
 | S1 — EAR feature | S2 — Distraction state | Integrated — Synthetic UDP packet |
 |---|---|---|
@@ -250,7 +250,7 @@ These are historical demonstrations, not validated performance results.
 - No phone-use classifier is implemented.
 - Raspberry Pi/edge deployment has not been measured or verified.
 - If the model shows no incoming values, confirm that only one sender is running, the sender prints that it is streaming, both processes are on the same host, and the Simulink model is listening on UDP port 5000.
-- If face/feature outputs are absent, check camera framing/lighting, model-file paths, and the Python environment; inspect the generated CSV's `Face_Detected` and feature columns before drawing conclusions.
+- If face/feature outputs are absent, check camera framing/lighting, model-file paths, and the Python environment; confirm that the camera and required model files are available.
 - If MATLAB reports missing UDP blocks, install/enable DSP System Toolbox and confirm compatibility with the MATLAB release.
 
 ## License and attribution

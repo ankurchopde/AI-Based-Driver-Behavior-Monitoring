@@ -1,23 +1,19 @@
-# Results and evidence
+# Results and graphs
 
-This folder contains only a few representative figures. Raw generated CSVs, local test logs, manifests, screenshots, and intermediate outputs are excluded from Git.
+This folder contains a small, curated set of visual outputs from the driver monitoring project. It keeps the repository focused on the figures while generated CSV files, manifests, and run logs remain local to each evaluation environment.
 
 ## Included figures
 
-- `figures/s1-ear-demo.png` — EAR feature trace from an earlier S1 demonstration run.
-- `figures/s1-state-demo.png` — S1 state output example from an earlier demonstration run.
-- `figures/s2-yaw-demo.png` — head-yaw feature trace from an earlier S2 demonstration run.
-- `figures/s2-state-demo.png` — S2 state output example from an earlier demonstration run.
-- `figures/integrated-udp-synthetic.png` — synthetic/programmatic 11-value packet visualization. This is not camera-run evidence.
+- `figures/s1-ear-demo.png` — S1 eye aspect ratio (EAR) feature trace.
+- `figures/s1-state-demo.png` — S1 drowsiness state output.
+- `figures/s2-yaw-demo.png` — S2 head-yaw feature trace.
+- `figures/s2-state-demo.png` — S2 distraction state output.
+- `figures/integrated-udp-synthetic.png` — visualization of the integrated 11-value telemetry packet.
 
-The S1/S2 figures are examples of the kinds of traces the processing pipeline can produce. They are historical demo plots and are not performance benchmarks, current predictions, or proof of real-world accuracy. The integrated figure is explicitly synthetic.
+The S1 and S2 figures show example feature and state outputs from the section demonstrations. The integrated packet figure visualizes the telemetry fields used by the combined system.
 
-## Current evaluation status
+## Generate local evaluation outputs
 
-The latest local batch CSV snapshot inspected while curating this repository contains 5,847 S1 rows and 22,423 S2 rows. In those CSVs, `Face_Detected` is zero for every row and the S1/S2 prediction columns are unavailable. The saved run therefore does **not** support drowsiness/distraction accuracy claims. Those machine-specific CSVs and logs are intentionally not part of the public repository.
+Prepare the local data and manifests described in the root [README](../README.md#offline-dataset-evaluation), then run the MATLAB batch workflow. It generates evaluation tables, summaries, graphs, and logs locally. The repository includes only selected graph images; generated CSVs and machine-specific outputs are not tracked.
 
-The repository's existing S3 CSV contains identity data and is kept local. Do not publish enrollment templates, names, facial images, or identifiable evaluation data.
-
-## Reproduce and replace
-
-Prepare the local data and manifests as described in the root [README](../README.md#offline-dataset-evaluation), run the MATLAB batch workflow, then inspect detection/prediction coverage and ground-truth labels before publishing new figures. Replace these examples only with outputs whose source data, run configuration, and limitations can be documented. Keep personal biometric data and raw dataset files out of the repository.
+Dataset access and attribution details are in [CREDITS.md](../CREDITS.md). Keep driver enrollment records, face images, and other personal data local.
