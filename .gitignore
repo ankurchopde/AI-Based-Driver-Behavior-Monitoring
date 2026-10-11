@@ -68,7 +68,7 @@ Backup_Project/
 experiments/
 hardware/
 docs/
-models/
+/models/
 
 # IDE and OS files
 .vscode/

@@ -33,7 +33,8 @@ fprintf(' S3 TEMPORARY DRIVER IDENTIFICATION PROCESSOR\n');
 fprintf(' REAL EXTRACTED FACE DATASET\n');
 fprintf('=============================================\n\n');
 
-PROJECT = 'D:\Academics\TY_SEM1\AE\AI based Driver Detector';
+scriptDir = fileparts(mfilename('fullpath'));
+PROJECT = fileparts(scriptDir);
 S3ROOT = fullfile(PROJECT,'dataset','section3_identification','extracted');
 OUT = fullfile(PROJECT,'PROJECT','Data','matlab_dataset_results');
 

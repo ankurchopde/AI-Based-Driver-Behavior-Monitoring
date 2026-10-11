@@ -28,7 +28,19 @@ class RecognitionSystem:
             if os.path.exists(emb_file):
                 self.driver_embeddings[int(driver_id_str)] = np.load(emb_file)
                 
-        # Initialize MediaPipe Tasks Vision FaceLandmarker
+        project_root = Path(__file__).resolve().parent.parent.parent
+        # Resolve MediaPipe Tasks Vision FaceLandmarker path
+        if not os.path.exists(task_path):
+            candidates = [
+                project_root / task_path,
+                project_root / "PROJECT/Models/external_backends/face_landmarker.task",
+                Path(__file__).resolve().parent.parent / "S1_Drowsiness/face_landmarker.task",
+                Path(__file__).resolve().parent.parent / "S2_Distraction/face_landmarker.task"
+            ]
+            for c in candidates:
+                if c.exists():
+                    task_path = str(c)
+                    break
         base_options = python.BaseOptions(model_asset_path=task_path)
         options = vision.FaceLandmarkerOptions(
             base_options=base_options,
@@ -42,6 +54,20 @@ class RecognitionSystem:
         self.detector = vision.FaceLandmarker.create_from_options(options)
             
         # Initialize OpenCV SFace
+        if not os.path.exists(self.model_path):
+            candidates_model = [
+                project_root / self.model_path,
+                project_root / "PROJECT/Models/identification/face_recognizer_fast.onnx",
+                Path(__file__).resolve().parent / "models/face_recognizer_fast.onnx"
+            ]
+            found = False
+            for c in candidates_model:
+                if c.exists():
+                    self.model_path = str(c)
+                    found = True
+                    break
+            if not found:
+                raise FileNotFoundError(f"Model not found at {self.model_path}")
         self.recognizer = cv2.FaceRecognizerSF.create(self.model_path, "")
         
     def get_embedding(self, frame):

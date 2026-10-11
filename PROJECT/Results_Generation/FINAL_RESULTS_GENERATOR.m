@@ -30,7 +30,9 @@ fprintf('=============================================\n\n');
 
 %% PATHS
 
-PROJECT = 'D:\Academics\TY_SEM1\AE\AI based Driver Detector';
+scriptDir = fileparts(mfilename('fullpath'));
+PROJECT = fileparts(fileparts(scriptDir));
+
 
 MANIFESTS = fullfile(PROJECT,'PROJECT','Data','processed_real','manifests');
 

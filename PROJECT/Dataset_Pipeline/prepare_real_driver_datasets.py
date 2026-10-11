@@ -57,7 +57,7 @@ except ImportError:
 # CONFIGURATION
 # ---------------------------------------------------------------------
 
-PROJECT = Path(r"D:\Academics\TY_SEM1\AE\AI based Driver Detector")
+PROJECT = Path(__file__).resolve().parent.parent.parent
 DATASET = PROJECT / "dataset"
 
 S1_ROOT = DATASET / "section1_drowsiness"

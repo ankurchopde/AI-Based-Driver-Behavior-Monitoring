@@ -27,14 +27,19 @@ import psutil
 # ---------------------------------------------------------------------
 # PROJECT PATHS
 # ---------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 S3_DIR = ROOT / "SECTIONS/S3_Driver_Identification"
 S3_DATA = ROOT / "dataset" / "section3_identification"
 MANIFEST = ROOT / "dataset" / "processed_real" / "manifests" / "section3_manifest.csv"
 
 MODEL = S3_DIR / "models" / "face_recognizer_fast.onnx"
+if not MODEL.exists():
+    MODEL = ROOT / "PROJECT" / "Models" / "identification" / "face_recognizer_fast.onnx"
+
 TASK = ROOT / "SECTIONS/S2_Distraction" / "face_landmarker.task"
+if not TASK.exists():
+    TASK = ROOT / "PROJECT" / "Models" / "external_backends" / "face_landmarker.task"
 
 EVAL_ROOT = S3_DATA / "eval_db_real"
 OUT_DIR = ROOT / "results" / "CSV"

@@ -34,10 +34,14 @@ fprintf('=============================================\n\n');
 % 1. PROJECT PATHS
 % ---------------------------------------------------------------
 
-PROJECT = 'D:\Academics\TY_SEM1\AE\AI based Driver Detector';
+scriptDir = fileparts(mfilename('fullpath'));
+PROJECT = fileparts(fileparts(scriptDir));
 DATASET = fullfile(PROJECT, 'dataset');
 
-PYTHON_SCRIPT = fullfile(PROJECT, 'prepare_real_driver_datasets.py');
+PYTHON_SCRIPT = fullfile(scriptDir, 'prepare_real_driver_datasets.py');
+if ~exist(PYTHON_SCRIPT, 'file')
+    PYTHON_SCRIPT = fullfile(PROJECT, 'prepare_real_driver_datasets.py');
+end
 PROCESSED = fullfile(DATASET, 'processed_real');
 MANIFESTS = fullfile(PROCESSED, 'manifests');
 RESULTS = fullfile(DATASET, 'matlab_dataset_results');

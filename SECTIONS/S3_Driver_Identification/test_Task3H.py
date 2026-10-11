@@ -2,6 +2,7 @@ import socket
 import struct
 import time
 import threading
+import numpy as np
 from Task3H_UDP_Sender import udp_worker, telemetry_data, telemetry_lock
 import Task3H_UDP_Sender
 

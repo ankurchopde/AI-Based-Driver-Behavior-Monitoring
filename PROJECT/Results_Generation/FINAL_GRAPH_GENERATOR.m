@@ -25,12 +25,18 @@ close all;
 % FULL PROJECT PATHS
 % ================================================================
 
-PROJECT_ROOT = ...
-    'D:\Academics\TY_SEM1\AE\AI based Driver Detector';
+scriptDir = fileparts(mfilename('fullpath'));
+PROJECT_ROOT = fileparts(fileparts(scriptDir));
 
-CSV_DIR = fullfile(PROJECT_ROOT,'results','CSV');
+CSV_DIR = fullfile(PROJECT_ROOT,'Results','CSV');
+if ~exist(CSV_DIR,'dir')
+    CSV_DIR = fullfile(PROJECT_ROOT,'results','CSV');
+end
 
-GRAPH_DIR = fullfile(PROJECT_ROOT,'results','Graphs');
+GRAPH_DIR = fullfile(PROJECT_ROOT,'Results','Graphs');
+if ~exist(GRAPH_DIR,'dir')
+    GRAPH_DIR = fullfile(PROJECT_ROOT,'results','Graphs');
+end
 
 %% Create graph directory if required
 
