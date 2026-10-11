@@ -392,7 +392,7 @@ The software architecture is engineered for Edge AI deployment on embedded platf
 
 ## 18. Acknowledgements & Credits
 
-* **Section 1 (Driver Drowsiness Detection):** The architecture, EAR/MAR formulation, and foundational development of Section 1 were authored by **Tanmaygt1** ([GitHub: @Tanmaygt1](https://github.com/Tanmaygt1)). This credit applies specifically and exclusively to Section 1.
+* **Section 1 (Driver Drowsiness Detection):** The architecture Section 1 was authored by **Tanmaygt1** ([GitHub: @Tanmaygt1](https://github.com/Tanmaygt1)). This credit applies specifically and exclusively to Section 1.
 * **Google MediaPipe:** Face Landmarker and Mesh models developed and released by Google LLC.
 * **OpenCV DNN SFace:** Lightweight deep face recognition model developed by the OpenCV community.
 
